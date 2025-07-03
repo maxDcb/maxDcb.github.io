@@ -1,11 +1,10 @@
-# 🧠 DreamWalkers
+# DreamWalkers
 
+Unlike traditional call stack spoofing, which often fails within reflectively loaded modules due to missing unwind metadata, DreamWalkers introduces a novel approach that enables clean and believable call stacks even during execution of shellcode-mapped payloads. By manually parsing the PE structure and registering custom unwind information via RtlAddFunctionTable, our loader restores proper stack unwinding — a capability that I didn't see achieved in reflective loading contexts. This allows our shellcode to blend in more effectively, even under the scrutiny of modern EDR and debugging tools.
 
-Code can be found here:
+Code can be found here: [DreamWalkers](https://github.com/maxDcb/DreamWalkers)
 
 Thanks to [almounah](https://github.com/almounah) for his help, even if he lost his way with go!
-
-Credit due to ...
 
 ---
 
@@ -54,6 +53,7 @@ Finally, to access required Windows APIs, we implement classic `GetProcAddress`/
 ### Resources
 
 [writing-optimized-windows-shellcode-in-c](https://web.archive.org/web/20210305190309/http://www.exploit-monday.com/2013/08/writing-optimized-windows-shellcode-in-c.html)
+
 [Donut - inmem_pe.c](https://github.com/TheWover/donut/blob/master/loader/inmem_pe.c)
 
 ---
@@ -106,6 +106,34 @@ I believe this trade-off is worthwhile. It allows us to:
 
 In this project, I used a C++ implementation of **Being-A-Good-CLR-Host**, along with basic ETW patching for stealth (and go good results with EDR). We use the "go" function exposed by dotnetLoader/DotnetExec.cpp that take the ptr to the module to load, its size and the command line to execute.
 
+``` python
+#
+# Shellcode generation
+#
+shellcode = bytearray()
+
+# call next: E8 + offset
+shellcode += b'\xE8' + struct.pack("<I", instance_size)
+
+# instance structure
+shellcode += blob
+
+# pop rcx
+shellcode += b'\x59'
+
+...
+
+# loader shellcode
+shellcode += MEMORYMODULE_EXE_X64
+
+if isDotNet:
+    # If it's a .NET executable, append the dotnetLoader - a dll
+    shellcode += dotnetLoader
+
+# the module to finaly load
+shellcode += peBinary
+```
+
 
 ---
 
@@ -118,6 +146,12 @@ In this project, I used a C++ implementation of **Being-A-Good-CLR-Host**, along
 I spent a lot of time banging my head against **call stack spoofing**. I was pretty disappointed to realize that it only worked reliably when the beacon was idle. Of course, that makes sense — most C2 beacons spend a lot of time idle — but it was frustrating nonetheless.
 
 While experimenting with integrating **LoudSunRun** into my project, I wanted my **reflectively loaded modules** to have a clean and believable call stack during execution. That led me deep into understanding how **Windows stack unwinding** actually works.
+
+What happens when you spoof the stack and then enter a function for which Windows has no unwind information:
+
+![WithoutRtlAddFunctionTable_stack](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png)
+
+![WithoutRtlAddFunctionTable_stack](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png)
 
 Eventually, I asked ChatGPT to summarize what I had learned and explain why spoofing doesn't work properly with reflectively loaded modules. It gave me this answer:
 
@@ -152,6 +186,24 @@ I already had all the PE sections mapped into memory — so why not use them to 
 
 Hope giving credit to my GPT will give me points for the future AI uprising.
 
+``` c++
+//
+// Add function table for stack unwinding
+//
+
+DWORD functionCount = result->pdataSize / sizeof(RUNTIME_FUNCTION);
+inst->api.RtlAddFunctionTable(result->pdataStart, functionCount, (DWORD64)result->codeBase);
+```
+
+What happens when you spoof the stack and then enter a function for which Windows has actual unwind information:
+
+
+![WithRtlAddFunctionTable_stack](./images/WindbgWithoutMS_stack2.png)
+
+![WithRtlAddFunctionTable_stack](./images/WindbgWithoutMS_stack3.png)
+
+In this case, Windows has the necessary unwind information for the function, allowing stack unwinding to proceed smoothly.
+
 
 ### Module stomping
 
@@ -161,6 +213,8 @@ Eventually, I got a call stack that looked legitimate. However, since the reflec
 To address this, I decided to add **module stomping**. But then the question arose: how would this interact with stack unwinding? After all, the stomped module has its own `.pdata` section.
 
 What I observed is that **the `.pdata` I registered via `RtlAddFunctionTable` is actually used**, and the result is surprisingly convincing! I don’t yet have a full explanation for why the unwinding information I load manually takes precedence over the stomped module’s `.pdata`. But if I skip the `RtlAddFunctionTable` step and rely solely on the original stomped module’s unwind data, the call stack looks like garbage again.
+
+![CleanStack](./images/CleanStack.png)
 
 
 ### Resources:
