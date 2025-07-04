@@ -41,7 +41,7 @@ Since **MemoryModule** doesn’t support command-line argument passing, I implem
 
 Later, I added **.NET (CLR) payload support**, using a different approach than Donut. Instead of relying on the shellcode loader direclty I rather load a dotnet loader that at its turn do the dotnet module loading. I used a C++ implmentation of [Being-A-Good-CLR-Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host). I found this implmentation more flexible.
 
-Finally, I wanted the loader to have a **clean and spoofed call stack**, which led to what I believe is a **novel technique** — or at least an original combination of multiple known techniques (call stack spoofind and module stomping) — that makes the stack look much more legitimate during execution, even for reflectively loaded modules.
+Finally, I wanted the loader to have a **clean and spoofed call stack**, which led to what I believe is a **novel technique** — or at least an original combination of multiple known techniques (call stack spoofing and module stomping) — that makes the stack look much more legitimate during execution, even for reflectively loaded modules.
 
 This page walks through each step of the process described above, exploring the techniques and decisions behind the loader.
 
