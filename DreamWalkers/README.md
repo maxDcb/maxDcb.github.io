@@ -6,11 +6,17 @@ Here is the stack trace of a simple shellcode injection, showing a Donut-generat
 
 ``` bash
 donut -p "Hello from Donut" -j "C:\\Windows\\system32\\Windows.Storage.dll" -i implant.exe
+```
+
+![](./images/Donut.png)
+
+
+``` bash
 python3 GenerateShellcode.py -f implant.exe -c "Hello from DreamWalkers"
 ```
 
-| ![](./images/Donut.png) | ![](./images/DreamWalkers.png) |
-|-----------------|-----------------|
+![](./images/DreamWalkers.png) 
+
 
 Code can be found here: [DreamWalkers](https://github.com/maxDcb/DreamWalkers)
 
@@ -163,8 +169,9 @@ While experimenting with integrating **LoudSunRun** into my project, I wanted my
 
 What happens when you spoof the stack and then enter a function for which Windows has no unwind information:
 
-| ![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png) | ![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png) |
-|-----------------|-----------------|
+![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png) 
+
+![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png)
 
 Eventually, I asked ChatGPT to summarize what I had learned and explain why spoofing doesn't work properly with reflectively loaded modules. It gave me this answer:
 
@@ -210,10 +217,9 @@ inst->api.RtlAddFunctionTable(result->pdataStart, functionCount, (DWORD64)result
 
 What happens when you spoof the stack and then enter a function for which Windows has actual unwind information:
 
+![](./images/WindbgWithoutMS_stack2.png)
 
-| ![](./images/WindbgWithoutMS_stack2.png) | ![](./images/WindbgWithoutMS_stack3.png) |
-|-----------------|-----------------|
-
+![](./images/WindbgWithoutMS_stack3.png)
 
 In this case, Windows has the necessary unwind information for the function, allowing stack unwinding to proceed smoothly.
 
