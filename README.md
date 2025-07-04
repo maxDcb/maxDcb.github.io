@@ -1,4 +1,4 @@
-# 🧠 Max's Research Blog
+# Max's Research Blog
 
 Welcome to my technical blog repository. This space is dedicated to sharing my personal research, proof-of-concepts, and tooling related to:
 

@@ -1,6 +1,16 @@
 # DreamWalkers
 
-Unlike traditional call stack spoofing, which often fails within reflectively loaded modules due to missing unwind metadata, DreamWalkers introduces a novel approach that enables clean and believable call stacks even during execution of shellcode-mapped payloads. By manually parsing the PE structure and registering custom unwind information via RtlAddFunctionTable, our loader restores proper stack unwinding — a capability that I didn't see achieved in reflective loading contexts. This allows our shellcode to blend in more effectively, even under the scrutiny of modern EDR and debugging tools.
+Unlike traditional call stack spoofing, which often fails within reflectively loaded modules due to missing unwind metadata, DreamWalkers introduces a novel approach that enables clean and believable call stacks even during execution of reflectivly loaded modules. By parsing the PE structure and manually registering unwind information via **`RtlAddFunctionTable`**, our loader restores proper stack unwinding — a capability that I didn't see achieved in reflective loading contexts. This allows our shellcode to blend in more effectively, even under the scrutiny of modern EDR and debugging tools.
+
+Here is the stack trace of a simple shellcode injection, showing a Donut-generated shellcode and a DreamWalker-generated shellcode side by side:
+
+``` bash
+donut -p "Hello from Donut" -j "C:\\Windows\\system32\\Windows.Storage.dll" -i implant.exe
+python3 GenerateShellcode.py -f implant.exe -c "Hello from DreamWalkers"
+```
+
+| ![](./images/Donut.png) | ![](./images/DreamWalkers.png) |
+|-----------------|-----------------|
 
 Code can be found here: [DreamWalkers](https://github.com/maxDcb/DreamWalkers)
 
@@ -52,8 +62,7 @@ Finally, to access required Windows APIs, we implement classic `GetProcAddress`/
 
 ### Resources
 
-[writing-optimized-windows-shellcode-in-c](https://web.archive.org/web/20210305190309/http://www.exploit-monday.com/2013/08/writing-optimized-windows-shellcode-in-c.html)
-
+[writing-optimized-windows-shellcode-in-c](https://web.archive.org/web/20210305190309/http://www.exploit-monday.com/2013/08/writing-optimized-windows-shellcode-in-c.html)   
 [Donut - inmem_pe.c](https://github.com/TheWover/donut/blob/master/loader/inmem_pe.c)
 
 ---
@@ -134,6 +143,11 @@ if isDotNet:
 shellcode += peBinary
 ```
 
+### Resources
+
+[Being a good CLR host](https://www.ibm.com/think/x-force/being-a-good-clr-host-modernizing-offensive-net-tradecraft?mhsrc=ibmsearch_a&mhq=being%20a%20good%20clr%20host)  
+[passthehashbrowns Being-A-Good-CLR-Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host)  
+[almounah go-buena-clr](https://github.com/almounah/go-buena-clr)
 
 ---
 
@@ -149,9 +163,8 @@ While experimenting with integrating **LoudSunRun** into my project, I wanted my
 
 What happens when you spoof the stack and then enter a function for which Windows has no unwind information:
 
-![WithoutRtlAddFunctionTable_stack](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png)
-
-![WithoutRtlAddFunctionTable_stack](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png)
+| ![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png) | ![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png) |
+|-----------------|-----------------|
 
 Eventually, I asked ChatGPT to summarize what I had learned and explain why spoofing doesn't work properly with reflectively loaded modules. It gave me this answer:
 
@@ -198,9 +211,9 @@ inst->api.RtlAddFunctionTable(result->pdataStart, functionCount, (DWORD64)result
 What happens when you spoof the stack and then enter a function for which Windows has actual unwind information:
 
 
-![WithRtlAddFunctionTable_stack](./images/WindbgWithoutMS_stack2.png)
+| ![](./images/WindbgWithoutMS_stack2.png) | ![](./images/WindbgWithoutMS_stack3.png) |
+|-----------------|-----------------|
 
-![WithRtlAddFunctionTable_stack](./images/WindbgWithoutMS_stack3.png)
 
 In this case, Windows has the necessary unwind information for the function, allowing stack unwinding to proceed smoothly.
 
@@ -219,7 +232,10 @@ What I observed is that **the `.pdata` I registered via `RtlAddFunctionTable` is
 
 ### Resources:
 
-[writing-a-debugger-from-scratch-part-6](https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-6/)
+[writing-a-debugger-from-scratch-part-6](https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-6/)  
+[SilentMoonwalk](https://github.com/klezVirus/SilentMoonwalk)  
+[Vulcan Raven](https://github.com/WithSecureLabs/CallStackSpoofer/)  
+[LoudSunRun](https://github.com/susMdT/LoudSunRun)  
 
 ---
 
