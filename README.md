@@ -11,6 +11,7 @@ Welcome to my technical blog repository. This space is dedicated to sharing my p
 
 - * My work on shellcode reflective loader [DreamWalkers](./DreamWalkers/)
 - * How [Codex](./Codex/) powered up my command-and-control development
+- * How I gave life to [Data](./DataAgent/) my C2 agent
 
 ---
 
