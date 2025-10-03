@@ -141,4 +141,6 @@ The resulting agent is capable of using the C2 as intended: it loads modules whe
 
 [![Watch the demo](./media/thumb.png)](./media/C2Agent.mp4)
 
+Code can be found [here](https://github.com/maxDcb/C2TeamServer/blob/develop/C2Client/C2Client/AssistantPanel.py)
+
 The remaining challenge is ensuring each tool always returns a well-formed, deterministic response, even when the underlying operation produces unexpected results, so the agent does not enter an indeterminate state.
