@@ -10,6 +10,7 @@ Welcome to my technical blog repository. This space is dedicated to sharing my p
 ## ✒️ Topics
 
 - * My work on shellcode reflective loader [DreamWalkers](./DreamWalkers/)
+- * How [Codex](./Codex/) powered up my command-and-control development
 
 ---
 
