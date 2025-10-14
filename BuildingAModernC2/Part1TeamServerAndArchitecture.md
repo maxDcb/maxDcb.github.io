@@ -1,11 +1,3 @@
----
-
-title: "Part 1 — TeamServer & Architecture"
-date: 2025-10-13
-author: "Maxime dcb"
-tags: [C2, architecture, grpc, conan, security, dev]
-----------------------------------------------------
-
 # Part 1 — TeamServer & Architecture
 
 This is **Part 1** of a short series on **C2TeamServer** — a modular Command-and-Control framework I maintain at `https://github.com/maxDcb/C2TeamServer`.
@@ -22,8 +14,21 @@ In this post I describe the **TeamServer** core: how it is built, how it communi
 
 ---
 
-## Build & dependency management — Conan + CMake
+## 🛠️ uild & dependency management — Conan + CMake
 
+The project is composed of several submodules that provide reusable code used across the repository (for example by the beacon):
+
+* **[C2Core](https://github.com/maxDcb/C2Core)** — one of the most important components; it contains the implementation of modules, beacons and listeners.
+* **[libDns](https://github.com/maxDcb/libDnsCommunication)** — DNS communication support.
+* **[libSocketHandler](https://github.com/maxDcb/libSocketHandler)** — TCP communication helpers.
+* **[libSocks5](https://github.com/maxDcb/libSocks5)** — SOCKS5 implementation.
+
+Third-party utilities used by the project:
+
+* **[cpp-base64](https://github.com/ReneNyffenegger/cpp-base64)** — base64 encoding/decoding.
+* **[Donut](https://github.com/TheWover/donut)** — a pivotal project that inspired parts of this work; used for `assemblyExec` functionality and others.
+* **[nlohmann/json](https://github.com/nlohmann/json)** — the JSON library used by the project (not included as a submodule).
+                                                                             
 To keep builds "friendly" (it's C++...) I use **Conan** for dependency management and **CMake** for the build.
 
 Example `conanfile.txt` (excerpt):
@@ -72,7 +77,7 @@ With a proper profile and binary cache (ConanCenter, Artifactory, or local), it 
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 TeamServer is configured with a JSON file (`TeamServerConfig.json`) that contains settings for logging, directory layout, network and connection configuration, TLS credentials, and listener definitions. The file defines where artifacts live, how the server advertises itself (domain / IP / interface), gRPC server parameters, and the TLS files used for secure communications. Listener-specific options are stored under their respective keys (e.g., `ListenerHttpConfig`) so the server can start and manage endpoints dynamically.
 
@@ -133,7 +138,7 @@ TeamServer is configured with a JSON file (`TeamServerConfig.json`) that contain
 
 ---
 
-## RPC backbone — gRPC with TLS
+## 📡 RPC backbone — gRPC with TLS
 
 TeamServer exposes a **gRPC API** for clients. gRPC gives us:
 
@@ -245,7 +250,7 @@ message TermCommand
 
 ---
 
-## Listeners: pluggable transport channels
+## 🛜 Listeners: pluggable transport channels
 
 A **listener** is a named network endpoint that accepts implant connections.
 Listeners are defined in the [C2Core](https://github.com/maxDcb/C2Core/tree/master/listener) submodule, as some of them are also used by implants to enable peer-to-peer communication between implants.
@@ -300,12 +305,12 @@ else if (type == ListenerHttpType)
 ```
 
 ```log
-[2025-10-14 02:48:20.594] [TeamServer] [info] AddListener Https 0.0.0.0:8443
-[2025-10-14 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uriFileDownload /uri/used/to/deliver/files/
-[2025-10-14 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] downloadFolder ../www
-[2025-10-14 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uri /Endpoint/to/communicate/with/httpListener/endpoint1.php
-[2025-10-14 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uri /Endpoint/to/communicate/with/httpListener/endpoint2.php
-[2025-10-14 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uri /OneMore/endpoint3.php
+[2401-06-06 02:48:20.594] [TeamServer] [info] AddListener Https 0.0.0.0:8443
+[2401-06-06 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uriFileDownload /uri/used/to/deliver/files/
+[2401-06-06 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] downloadFolder ../www
+[2401-06-06 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uri /Endpoint/to/communicate/with/httpListener/endpoint1.php
+[2401-06-06 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uri /Endpoint/to/communicate/with/httpListener/endpoint2.php
+[2401-06-06 02:48:20.595] [Listener_https_8443_OKAHxey7] [info] uri /OneMore/endpoint3.php
 ...
 ```
 
@@ -427,7 +432,7 @@ Listeners are modular in the sense that they decouple the communication channel 
 
 ---
 
-## Modules — shared libraries (.so) for message generation & tasks
+## 🧩 Modules — shared libraries (.so) for message generation & tasks
 
 To keep TeamServer lean and extensible, functional logic is packaged as **shared libraries** (`.so`) that the TeamServer can load at runtime. Paired libraries (`.so` for Linux and `.dll` for Windows) are built for the Beacon side as well. The paired concept acknowledges that the functionality needed by the TeamServer and the implant differ: modules compiled for the TeamServer exclude exploit logic, while modules compiled for the Beacon exclude server-only helpers to reduce detection surface.
 
@@ -531,19 +536,22 @@ TeamServer::TeamServer(const nlohmann::json& config)
 }
 ```
 
-```log
+```log                                                                                                     
 └─$ ./TeamServer                                                                                                      
-[2025-10-14 02:43:14.547] [TeamServer] [info] TeamServer module directory path ../TeamServerModules/ 
-[2025-10-14 02:43:14.558] [TeamServer] [info] Trying to load ../TeamServerModules/libEvasion.so       
-[2025-10-14 02:43:14.559] [TeamServer] [info] Looking for construtor function EvasionConstructor 
-[2025-10-14 02:43:14.559] [TeamServer] [info] Module libEvasion.so loaded                      
-[2025-10-14 02:43:14.559] [TeamServer] [info] Trying to load ../TeamServerModules/libScreenShot.so       
-[2025-10-14 02:43:14.560] [TeamServer] [info] Looking for construtor function ScreenShotConstructor       
-[2025-10-14 02:43:14.560] [TeamServer] [info] Module libScreenShot.so loaded                  
-[2025-10-14 02:43:14.560] [TeamServer] [info] Trying to load ../TeamServerModules/libPrintWorkingDirectory.so
-[2025-10-14 02:43:14.561] [TeamServer] [info] Looking for construtor function PrintWorkingDirectoryConstructor
-[2025-10-14 02:43:14.561] [TeamServer] [info] Module libPrintWorkingDirectory.so loaded    
+[2401-06-06 10:08:07.362] [TeamServer] [info] TeamServer logging initialized at debug level                        
+[2401-06-06 10:08:07.364] [TeamServer] [debug] TeamServer logging initialized at debug level           
+[2401-06-06 10:08:07.365] [TeamServer] [info] Authentication enabled for 2 user(s) using credentials file: auth_credentials.json                                                                                                            
+[2401-06-06 10:08:07.366] [TeamServer] [debug] TeamServer module directory path ../TeamServerModules/                                                                                                                                       
+[2401-06-06 10:08:07.367] [TeamServer] [debug] Trying to load ../TeamServerModules/libEvasion.so             
+[2401-06-06 10:08:07.367] [TeamServer] [debug] Looking for construtor function EvasionConstructor
+[2401-06-06 10:08:07.367] [TeamServer] [debug] Module libEvasion.so loaded
+[2401-06-06 10:08:07.367] [TeamServer] [debug] Trying to load ../TeamServerModules/libScreenShot.so
+[2401-06-06 10:08:07.368] [TeamServer] [debug] Looking for construtor function ScreenShotConstructor
+[2401-06-06 10:08:07.368] [TeamServer] [debug] Module libScreenShot.so loaded 
 ...
+[2401-06-06 10:08:07.404] [TeamServer] [debug] Module libChisel.so loaded                    
+[2401-06-06 10:08:07.404] [TeamServer] [info] Loaded 38 TeamServer module(s) from ../TeamServerModules/
+[2401-06-06 10:08:07.493] [TeamServer] [info] Team Server listening on 0.0.0.0:50051 
 ```
 
 We can request reloading of modules if one is added or updated:
@@ -644,7 +652,7 @@ This modular and hot-swappable approach is a **core design principle** of the C2
 
 ---
 
-### SOCKS5 & Proxy Support
+## 🔀 SOCKS5 & Proxy Support
 
 In addition to classic listeners (HTTP, TCP, DNS, etc.), the TeamServer also supports a **SOCKS5 mode**, enabling operator traffic proxying and pivoting via connected implants. When a SOCKS5 is active, the TeamServer will accept incoming SOCKS5 client connections (e.g. from your attack workstation) and then forward the data through normal listeners to the implant living on the target network.
 
@@ -756,9 +764,20 @@ The library handles the SOCKS5 protocol stack: including handshake, authenticati
 
 ---
 
-## Logging
+## 📜 Logging
 
-TeamServer logs using `spdlog` in `logs/TeamServer.txt` and provides good traceability of operations and actions performed.
+TeamServer logs using `spdlog` in `logs/` and provides good traceability of operations and actions performed. 
+For auditability and forensic tracing, TeamServer records the hash for any file payload attached to a task. The log entry includes the filename, payload size, the computed hash, and a timestamp. Hashing is performed in-memory on the payload, and only the fingerprint is persisted in logs.
+
+```log
+[2401-06-06 10:14:37.712] [TeamServer] [info] Queued command for beacon MTGAcmSd → 'loadModule upload'
+[2401-06-06 10:14:37.712] [TeamServer] [info] File attached to task: 'libUpload.so' | size=34760 bytes | MD5=19cd5908984d71051a17d278a65ee2ec
+...
+[2401-06-06 10:14:43.429] [TeamServer] [info] Queued command for beacon MTGAcmSd → 'upload superMalware /tmp/superMalware'
+[2401-06-06 10:14:43.429] [TeamServer] [info] File attached to task: 'superMalware' | size=3218 bytes | MD5=d98971f190d2f0c2f85bccefab930d33
+[2401-06-06 10:14:43.429] [Listener_https_8443_lWdwtgk8] [debug] Queued task for beacon MTGAcmSdMEOg307cOfLdO692WzBORNZG
+
+```
 
 ---
 
@@ -776,21 +795,11 @@ This setup provides multiple security benefits:
 * 🧰 **Stealth:** Makes it easier to blend C2 traffic into normal web traffic using domain fronting or proxy camouflage.
 * 📝 **Auditing:** Proxies provide an additional layer of logging and monitoring without touching the C2 codebase.
 
-This layered architecture — **TeamServer in a secured internal environment**, **proxy at the edge** — greatly improves the operational security of your C2 infrastructure while maintaining flexibility for listeners and implants.
+This layered architecture: **TeamServer in a secured internal environment**, **proxy at the edge**, greatly improves the operational security of your C2 infrastructure while maintaining flexibility for listeners and implants.
 
 ---
 
-## What’s next (Part 2 teaser)
+## What’s next
 
-In Part 2 we’ll deep-dive into **Listeners & network design**:
+In Part 2 we’ll deep-dive into **Listeners**:
 
-* Implementing HTTP(S) and DNS listeners with domain-fronting.
-* Implementation of TCP and SMB listeners with peer-to-peer implant chaining.
-
----
-
-If you want, I can now:
-
-* add inline protobuf message examples for `Session`, `Command`, and `CommandResponse`;
-* generate a small architecture diagram to include in the blog; or
-* draft Part 2 (Listeners & network design) with code excerpts and detection-hardening notes. Which would you like next?

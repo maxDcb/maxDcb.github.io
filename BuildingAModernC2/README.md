@@ -1,12 +1,14 @@
 # Building a Modern C2 — Introduction to the series
 
-I’m starting a short series of technical posts about my Command-and-Control (C2) framework **C2TeamServer** (repo: [https://github.com/maxDcb/C2TeamServer](https://github.com/maxDcb/C2TeamServer)). Over the next articles I’ll walk through the project end-to-end: the **teamserver architecture and listeners**, the **GUI and operator workflows**, the **implants channels and modules stealth strategies**. This first post is a roadmap: what the project is, why I built it, and what I will present in upcoming posts.
+I’m starting a series of technical posts about my Command-and-Control (C2) framework **C2TeamServer** (repo: [https://github.com/maxDcb/C2TeamServer](https://github.com/maxDcb/C2TeamServer)). Over the next articles I’ll walk through the project end-to-end: the **teamserver architecture and listeners**, the **GUI and operator workflows**, the **implants channels and modules stealth strategies**. This first post is a roadmap: what the project is, why I built it, and what I will present in upcoming posts.
 
 ---
 
-## Why write this series?
+Why write this series?
 
-There’s a lot of high-level C2 analysis out there, and many PoCs that show a single technique. My goal is different: to share an *engineered, modular* C2 implementation with practical explanations. and a detailed look at architecture choices. This series is meant to be technical and hands-on.
+There’s already a lot of high-level C2 analysis and single-technique PoCs out there. My goal is different: to share an engineered, modular C2 implementation with practical, hands-on explanations and a clear look at the architecture decisions behind it. This series is aimed at practitioners who want to understand not just what works, but why it was built that way.
+
+I started this project after taking the CRTO and experimenting with tools like Cobalt Strike. Coming from a C++ development background, I found it instructive to build a complete C2 stack to better understand the mechanics and tradeoffs. I’ve been developing this in my spare time for about two years; the project is now mature enough that it’s worth summarising my work and moving it to the next level — more structure, clearer docs, and tangible examples that others can learn from or contribute to.
 
 ---
 
@@ -14,13 +16,13 @@ There’s a lot of high-level C2 analysis out there, and many PoCs that show a s
 
 **C2TeamServer** is my modular C2 framework. At a high level it consists of:
 
-* **TeamServer** — the central controller that manages listeners, manages operator sessions, routes messages, stores task/output history and enforces policy.
-* **Listeners** — network endpoints (HTTP, HTTPS, DNS, SMB, etc.) that accept inbound connections from implants. Listeners are pluggable and configurable.
-* **Implants** — agents that connect back to listeners, handles modules to execute tasks (payload system operation, file transfer, process injection, etc.). Multiple channel implementations are supported.
+* **TeamServer** — the central controller that manages listeners, manages sessions, routes messages, and distribute task/output.
+* **Listeners** — network endpoints (HTTP, HTTPS, DNS, SMB, etc.) that accept inbound connections from implants. Listeners easy to develop, pluggable and configurable.
+* **Implants** — agents that connect back to listeners, handles modules to execute tasks (system operation, file transfer, process injection, etc.).
 * **GUI** — a desktop interface to interact with the server, visualize active sessions, author tasks, manage droppers and more.
-* **Modules** — small, testable components (e.g., file transfer, lateral movement helpers, simple commands) that will be the action executed by an implant.
+* **Modules** — small, testable components (e.g., file transfer, lateral movement, commands) that will be the action executed by an implant.
 
-The repo is organized to favor **modularity** and **testability**.
+The repo is organized to favor **modularity**.
 
 ---
 
@@ -28,7 +30,7 @@ The repo is organized to favor **modularity** and **testability**.
 
 This series assumes:
 
-* Intermediate to advanced knowledge of systems programming (principaly C/C++).
+* Intermediate knowledge of systems programming (principaly C/C++).
 * Familiarity with Linux/Windows internals (processes, tokens, networking).
 * Comfort reading code, running local labs.
 
@@ -36,58 +38,47 @@ This series assumes:
 
 ## Series roadmap (what to expect)
 
-I’ll break the work into focused posts so each article is concise, deep and actionable.
+I’ll break the work into focused posts so each article is deep and thorough.
 
 ### Part 1 — TeamServer & Architecture (next post)
 
-* Goals and high-level architecture.
-* Messagerie choices.
+* Build system
+* Messagerie choices
 * Handling of listeners
 * Interaction with modules
-* What rest to be done - authentication
-
-What you’ll get: diagrams, configuration examples, and a walkthrough of the TeamServer startup and control loop.
 
 ### Part 2 — Listeners & network design
 
-* How listeners are implemented and why (HTTP/HTTPS, DNS, TCP raw, named pipes).
-
-What you’ll get: ...
+* How listeners are implemented and why (HTTP/HTTPS, DNS, TCP raw, named pipes)
 
 ### Part 3 — GUI & operator workflows
 
-* GUI design goals: minimal friction, operator safety, and session management.
-* Visualizing sessions, uploading modules, task templates and canned post-exploitation flows.
-* Logging, multi-operator coordination, and safe task review.
-* What rest to be done - ...
-
-What you’ll get: ...
+* GUI design goals
+* Why I choose python with modularity in mind
 
 ### Part 4 — Implant design, channels & steal strategies
 
-* Implant architecture: scheduling, comms stack, module management.
-* Channel implementations.
-* “Steal” strategies.
+* Implant architecture
+* Channel implementations
+* “Steal” strategies
 
-What you’ll get: ...
+### Part 5 — Modules ?
 
-### Part 5 — ...
-
-...
+* I don't know yet
 
 ---
 
 ## Want to follow along?
 
 * Star and watch the repo: [https://github.com/maxDcb/C2TeamServer](https://github.com/maxDcb/C2TeamServer)
-* I’ll publish each post to my blog ([https://maxdcb.github.io/](https://maxdcb.github.io/)) and link code examples in the repo.
+* I’ll publish each post to my blog ([https://maxdcb.github.io/](https://maxdcb.github.io/)).
 
 ---
 
 ## Wrap up
 
-This series will be practical, code-centric. The next post (TeamServer internals and configuration) will dive into the codebase structure, key modules, and show the TeamServer boot flow and config examples.
+This series will be practical, code-centric. The next post (TeamServer internals and configuration) will dive into the codebase structure, key modules, and show the TeamServer boot flow.
 
 If there’s a specific angle you want me to prioritize (deep dive on a particular transport, UI automation, or implant persistence mechanics), tell me which one and I’ll fold it into the schedule.
 
-Ready? Here is (Part 1 — TeamServer & Architecture)[./OpenShiftGrPart1TeamServerAndArchitecture.md].
+Ready? Here is [Part 1 — TeamServer & Architecture](./OpenShiftGrPart1TeamServerAndArchitecture.md).
