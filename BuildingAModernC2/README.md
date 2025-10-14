@@ -81,4 +81,4 @@ This series will be practical, code-centric. The next post (TeamServer internals
 
 If there’s a specific angle you want me to prioritize (deep dive on a particular transport, UI automation, or implant persistence mechanics), tell me which one and I’ll fold it into the schedule.
 
-Ready? Here is [Part 1 — TeamServer & Architecture](./OpenShiftGrPart1TeamServerAndArchitecture.md).
+Ready? Here is [Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).
