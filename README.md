@@ -9,10 +9,13 @@ Welcome to my technical blog repository. This space is dedicated to sharing my p
 
 ## ✒️ Topics
 
-- * My work on shellcode reflective loader [DreamWalkers](./DreamWalkers/)
-- * How [Codex](./Codex/) powered up my command-and-control development
-- * How I gave life to [Data](./DataAgent/) my C2 agent
-- * [OpenShiftGrapher](./OpenShiftGrapher/): Visualizing & Securing Your OpenShift Cluster
+- My work on shellcode reflective loader [DreamWalkers](./DreamWalkers/)
+- How [Codex](./Codex/) powered up my command-and-control development
+- [OpenShiftGrapher](./OpenShiftGrapher/): Visualizing & Securing Your OpenShift Cluster
+- How I gave life to [Data](./DataAgent/) my C2 agent
+- [BuildingAModernC2](./BuildingAModernC2/): A series of technical posts about **C2TeamServer**
+- - [Part 1](./BuildingAModernC2/Part1TeamServerAndArchitecture.md) the **TeamServer**
+
 
 ---
 
