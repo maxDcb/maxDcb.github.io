@@ -120,12 +120,81 @@ TeamServer is configured with a JSON file (`TeamServerConfig.json`) that contain
   * **`ToolsDirectoryPath`** — common tools (examples: helper utilities).
   * **`ScriptsDirectoryPath`** — packaging/build scripts (examples: PowerShell or shell scripts used for dropper generation).
 
+```bash
+└─$ tree 
+├── LinuxBeacons
+│   ├── BeaconDns
+│   ├── BeaconHttp
+│   ├── BeaconSmb
+│   └── BeaconTcp
+├── LinuxModules
+│   ├── libAssemblyExec.so
+│   ├── libCat.so
+...
+│   ├── libWhoami.so
+│   └── libWmiExec.so
+├── Scripts
+│   ├── amsiBypass.ps1
+├── TeamServer
+│   ├── auth_credentials.json
+│   ├── localhost.crt
+│   ├── localhost.key
+│   ├── logs
+│   │   ├── Listener_dns_tZTi7mgFFfvwVTOHVlwd77yiSMImXCDd.txt
+│   │   ├── Listener_https_443_34urAaiNs9GnD4hvvzsBPpuwvbWv0ifC.txt
+│   │   ├── Listener_https_8446_wKiR7NJere6jCe25XQxjiqAIQsiN4vNn.txt
+│   │   ├── Listener_https_9001_KildrWJakH8N898a2ZqiNDDibZNLrPRd.txt
+│   │   ├── Listener_tcp_4444_TVT8eAMTEExLO4kbuDvEdVj2gwP2GZB7.txt
+│   │   └── TeamServer.txt
+│   ├── rootCA.crt
+│   ├── server.crt
+│   ├── server.key
+│   ├── TeamServer
+│   ├── TeamServerConfig.json
+│   └── testDns.py
+├── TeamServerModules
+│   ├── libAssemblyExec.so
+│   ├── libCat.so
+...
+│   ├── libWhoami.so
+│   └── libWmiExec.so
+├── Tools
+│   └── Rubeus.exe
+├── WindowsBeacons
+│   ├── BeaconDnsDll.dll
+│   ├── BeaconDns.exe
+...
+│   ├── BeaconTcpDll.dll
+│   ├── BeaconTcp.exe
+├── WindowsModules
+│   ├── AssemblyExec.dll
+│   ├── Cat.dll
+...
+│   ├── Whoami.dll
+│   └── WmiExec.dll
+└── www
+    ├── implant.dll
+    ├── implant.exe
+    ├── SOOBTAAN8NT4VDP
+    └── test.ps1
+```
+
 * **Exposed network / dropper generation**
 
   * **`DomainName`** — a public domain used for HTTP(S) listeners and for generating droppers that point to the server (e.g., `updates.example.com`).
   * **`ExposedIp`** — raw IP to advertise in droppers if you prefer IP over domain.
   * **`IpInterface`** — interface name used for testing or when you want the server to auto-detect the bind address from a specific NIC (useful in multi-NIC dev hosts).
     These fields are used by droppers and build scripts to embed the correct callback address.
+
+
+```json
+"ExposedIp": "buildModulareC2.com",
+```
+
+
+![alt text](media/configDemo1.png)
+
+![alt text](media/configDemo2.png)
 
 * **gRPC & TLS**
 
@@ -276,6 +345,8 @@ Each listener has:
 * `type` — transport (`http`, `https`, `dns`, `tcp`, `smb`, `namedpipe`, …).
 * `params` — IP, port, interface, domain, etc.
 * `optional param` — transport-specific settings (TLS profile, domain fronting options, jitter settings, etc.).
+
+![alt text](media/listeners.png)
 
 The implementation uses standard C++ inheritance to abstract the communication layer from message and session handling:
 
@@ -457,6 +528,8 @@ Benefits:
 * Add / replace modules without rebuilding TeamServer or restarting the process.
 * Allow implants to `FetchModule` on demand (reduces initial implant size and exposure).
 
+![alt text](media/ipconfig.png)
+
 ### Module contract
 
 Each module inherits from [ModuleCmd](https://github.com/maxDcb/C2Core/blob/master/modules/ModuleCmd/ModuleCmd.hpp) so the TeamServer and the Beacon both handle a list of `ModuleCmd` instances without needing to know implementation details:
@@ -523,6 +596,7 @@ TeamServer::TeamServer(const nlohmann::json& config)
             {
                 m_logger->info("Trying to load {0}", entry.path().c_str());
 
+                // Load dynamicaly the library
                 void *handle = dlopen(entry.path().c_str(), RTLD_LAZY);
 
                 if (!handle) 
@@ -531,16 +605,19 @@ TeamServer::TeamServer(const nlohmann::json& config)
                     continue;
                 }
 
+                // Construct the constructor name
                 std::string funcName = ...
 
                 m_logger->info("Looking for constructor function {0}", funcName);
 
+                // call the constructor 
                 constructProc construct = (constructProc)dlsym(handle, funcName.c_str());
                 if (construct == NULL) 
                 {
                     ...
                 }
 
+                // Store the new ModuleCmd object in a list of available modules
                 ModuleCmd* moduleCmd = construct();
 
                 std::unique_ptr<ModuleCmd> moduleCmd_(moduleCmd);
@@ -682,6 +759,8 @@ The flow is:
 
 This SOCKS5 functionality leverages the same listener/message infrastructure used for other tasks: request encryption, and multiplexing are reused. Because it's integrated at the listener/session layer, it inherits the same as other messages.
 
+![alt text](media/socks.png)
+
 ```c++
 grpc::Status TeamServer::SendTermCmd(grpc::ServerContext* context, const teamserverapi::TermCommand* command,  teamserverapi::TermCommand* response)
 {
@@ -783,7 +862,6 @@ The library handles the SOCKS5 protocol stack: including handshake, authenticati
 
 These are the primary **gRPC instructions** exposed by the TeamServer to perform management tasks and extend functionality. Each entry includes:
 
-
 ### `InfoListenerInstruction` — `"infoListener"`
 
 **Purpose:** return metadata about a listener (type, bind address, port, etc.). Useful for GUI for verifying listener configuration remotely.
@@ -792,42 +870,31 @@ These are the primary **gRPC instructions** exposed by the TeamServer to perform
 
 **Purpose:** return the correct payload/binary for a target architecture and listener. Used by dropper-builder UIs and automated deployers.
 
----
-
 ### `PutIntoUploadDirInstruction` — `"putIntoUploadDir"`
 
 **Purpose:** place a file into a listener’s public download area so implants (or operators) can retrieve it via the listener’s configured URIs.
 
----
-
-### 4) `ReloadModulesInstruction` — `"reloadModules"`
+### `ReloadModulesInstruction` — `"reloadModules"`
 
 **Purpose:** reload dynamic modules (`.so`) that add capabilities to beacons (new commands, persistence, post-exploit plugins) without restarting the TeamServer.
-
----
 
 ### `BatcaveInstruction` — `"batcaveUpload"`
 
 **Purpose:** convenience utility that fetches tools from GitHub (or other configured sources) and deploys them into the TeamServer tools directory. Ideal for operators to quickly add utilities used by implants or post-exploit workflows.
 
----
-
 ### `AddCredentialInstruction` — `"addCred"`
 
-**Purpose:** add credentials (username/password, NTLM hash, certificate, API token) into the TeamServer credential store for operator lookups. Used GUI side by some modules automaticaly.
+![alt text](media/credStore.png)
 
----
+**Purpose:** add credentials (username/password, NTLM hash, certificate, API token) into the TeamServer credential store for operator lookups. Used GUI side by some modules automaticaly.
 
 ### `GetCredentialInstruction` — `"getCred"`
 
 **Purpose:** retrieve a credential from the credential store.
 
----
-
 ### 8) `SocksInstruction_` — `"socks"`
 
 **Purpose:** endpoint to manage SOCKS5 service(s) provided by the TeamServer (start/bind/stop a socks proxy). This is the entry point for socks management.
-
 
 ---
 
