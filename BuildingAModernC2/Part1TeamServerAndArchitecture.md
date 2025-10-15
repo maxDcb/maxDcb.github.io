@@ -146,7 +146,7 @@ TeamServer exposes a **gRPC API** for clients. gRPC gives us:
 * Built-in streaming for long-running sessions and large file transfers.
 * Language-agnostic clients (the client could be C/C++, Go, Python, Nim...).
 
-All gRPC endpoints are protected by **TLS**. Certificates are configured in the TeamServer config (see earlier).
+All gRPC endpoints are protected by **TLS** and Authentication. Certificates are configured in the TeamServer config (see earlier).
 
 All procedures and messages between client and server are defined here: `libs/libGrpcMessages/src/TeamServerApi.proto`
 
@@ -154,6 +154,8 @@ All procedures and messages between client and server are defined here: `libs/li
 // Interface exported by the server.
 service TeamServerApi 
 {
+  rpc Authenticate(AuthRequest) returns (AuthResponse) {}
+
   rpc GetListeners(Empty) returns (stream Listener) {}
   rpc AddListener(Listener) returns (Response) {}
   rpc StopListener(Listener) returns (Response) {}
@@ -170,6 +172,20 @@ service TeamServerApi
 ```
 
 ```proto
+message AuthRequest
+{
+  string username = 1;
+  string password = 2;
+}
+
+
+message AuthResponse
+{
+  ...
+  string token = 2;
+}
+
+
 message Response 
 {
   ...
@@ -761,8 +777,60 @@ This design allows the SOCKS5 component to be **reused outside of the C2 framewo
 
 The library handles the SOCKS5 protocol stack: including handshake, authentication, and data forwarding and is designed to integrate cleanly with the TeamServer’s session and listener model. By separating the SOCKS5 logic from the C2 core, the implementation remains **modular**, **testable**, and **easy to maintain**.
 
+---
+
+## 🛰️ TeamServer capabilities
+
+These are the primary **gRPC instructions** exposed by the TeamServer to perform management tasks and extend functionality. Each entry includes:
+
+
+### `InfoListenerInstruction` — `"infoListener"`
+
+**Purpose:** return metadata about a listener (type, bind address, port, etc.). Useful for GUI for verifying listener configuration remotely.
+
+### `GetBeaconBinaryInstruction` — `"getBeaconBinary"`
+
+**Purpose:** return the correct payload/binary for a target architecture and listener. Used by dropper-builder UIs and automated deployers.
 
 ---
+
+### `PutIntoUploadDirInstruction` — `"putIntoUploadDir"`
+
+**Purpose:** place a file into a listener’s public download area so implants (or operators) can retrieve it via the listener’s configured URIs.
+
+---
+
+### 4) `ReloadModulesInstruction` — `"reloadModules"`
+
+**Purpose:** reload dynamic modules (`.so`) that add capabilities to beacons (new commands, persistence, post-exploit plugins) without restarting the TeamServer.
+
+---
+
+### `BatcaveInstruction` — `"batcaveUpload"`
+
+**Purpose:** convenience utility that fetches tools from GitHub (or other configured sources) and deploys them into the TeamServer tools directory. Ideal for operators to quickly add utilities used by implants or post-exploit workflows.
+
+---
+
+### `AddCredentialInstruction` — `"addCred"`
+
+**Purpose:** add credentials (username/password, NTLM hash, certificate, API token) into the TeamServer credential store for operator lookups. Used GUI side by some modules automaticaly.
+
+---
+
+### `GetCredentialInstruction` — `"getCred"`
+
+**Purpose:** retrieve a credential from the credential store.
+
+---
+
+### 8) `SocksInstruction_` — `"socks"`
+
+**Purpose:** endpoint to manage SOCKS5 service(s) provided by the TeamServer (start/bind/stop a socks proxy). This is the entry point for socks management.
+
+
+---
+
 
 ## 📜 Logging
 
@@ -776,7 +844,6 @@ For auditability and forensic tracing, TeamServer records the hash for any file 
 [2401-06-06 10:14:43.429] [TeamServer] [info] Queued command for beacon MTGAcmSd → 'upload superMalware /tmp/superMalware'
 [2401-06-06 10:14:43.429] [TeamServer] [info] File attached to task: 'superMalware' | size=3218 bytes | MD5=d98971f190d2f0c2f85bccefab930d33
 [2401-06-06 10:14:43.429] [Listener_https_8443_lWdwtgk8] [debug] Queued task for beacon MTGAcmSdMEOg307cOfLdO692WzBORNZG
-
 ```
 
 ---
