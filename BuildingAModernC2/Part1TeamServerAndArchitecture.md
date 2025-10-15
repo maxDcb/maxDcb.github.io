@@ -766,38 +766,38 @@ grpc::Status TeamServer::SendTermCmd(grpc::ServerContext* context, const teamser
 {
     ...
     else if(instruction == SocksInstruction_)
-	{
+    {
         ...
             else if(cmd == "bind")
-			{
-				if(!m_isSocksServerRunning)
-				{
-					...
-				}
-				if(m_isSocksServerBinded)
-				{
-					...
-				}
-				if(splitedCmd.size()==3)
-				{
-					std::string beaconHash = splitedCmd[2];
-					for (int i = 0; i < m_listeners.size(); i++)
-					{
-						int nbSession = m_listeners[i]->getNumberOfSession();
-						for(int kk=0; kk<nbSession; kk++)
-						{
-							std::shared_ptr<Session> session = m_listeners[i]->getSessionPtr(kk);
-							std::string hash = session->getBeaconHash();
-							if (hash.find(beaconHash) != std::string::npos && !session->isSessionKilled()) 
-							{
+            {
+                if(!m_isSocksServerRunning)
+                {
+                    ...
+                }
+                if(m_isSocksServerBinded)
+                {
+                    ...
+                }
+                if(splitedCmd.size()==3)
+                {
+                    std::string beaconHash = splitedCmd[2];
+                    for (int i = 0; i < m_listeners.size(); i++)
+                    {
+                        int nbSession = m_listeners[i]->getNumberOfSession();
+                        for(int kk=0; kk<nbSession; kk++)
+                        {
+                            std::shared_ptr<Session> session = m_listeners[i]->getSessionPtr(kk);
+                            std::string hash = session->getBeaconHash();
+                            if (hash.find(beaconHash) != std::string::npos && !session->isSessionKilled()) 
+                            {
                                 // Set the socksListener to the Listener witht the connection to the beacon
-								m_socksListener = m_listeners[i];
+                                m_socksListener = m_listeners[i];
 
                                 // Set the socksSession to the session related to the target beacon
-								m_socksSession = m_listeners[i]->getSessionPtr(kk);
+                                m_socksSession = m_listeners[i]->getSessionPtr(kk);
 
                                 // Start the socks thread
-								m_socksThread = std::make_unique<std::thread>(&TeamServer::socksThread, this);
+                                m_socksThread = std::make_unique<std::thread>(&TeamServer::socksThread, this);
 
                                 ...
                             }
@@ -815,37 +815,37 @@ void TeamServer::socksThread()
     while(m_isSocksServerBinded)
     {
 
-		C2Message c2Message = m_socksListener->getSocksTaskResult(m_socksSession->getBeaconHash());
+        C2Message c2Message = m_socksListener->getSocksTaskResult(m_socksSession->getBeaconHash());
         
         ...
 
                 else if(state == SocksState::RUN)
-				{
-					m_logger->trace("Socks5 run {}", id);
+                {
+                    m_logger->trace("Socks5 run {}", id);
 
-					dataIn="";
-					if(c2Message.instruction() == Socks5Cmd && c2Message.cmd() == RunCmd && c2Message.pid() == id)
-					{
-						m_logger->debug("Socks5 {}: data received from beacon", id);
+                    dataIn="";
+                    if(c2Message.instruction() == Socks5Cmd && c2Message.cmd() == RunCmd && c2Message.pid() == id)
+                    {
+                        m_logger->debug("Socks5 {}: data received from beacon", id);
 
-						dataIn=c2Message.data();
-					
+                        dataIn=c2Message.data();
+                    
                         // Connected to the tool using the socks server, ex: proxychain rdesktop...
-						int res = tunnel->process(dataIn, dataOut);
+                        int res = tunnel->process(dataIn, dataOut);
 
-						m_logger->debug("Socks5 process, rec {}, dataIn {}, to send {}", res, dataIn.size(), dataOut.size());
+                        m_logger->debug("Socks5 process, rec {}, dataIn {}, to send {}", res, dataIn.size(), dataOut.size());
 
                         ...
                         else
-						{
-							m_logger->debug("Socks5 send data to beacon");
+                        {
+                            m_logger->debug("Socks5 send data to beacon");
 
-							C2Message c2MessageToSend;
-							...
+                            C2Message c2MessageToSend;
+                            ...
 
-							if(!c2MessageToSend.instruction().empty())
-								m_socksListener->queueTask(m_socksSession->getBeaconHash(), c2MessageToSend);
-						}
+                            if(!c2MessageToSend.instruction().empty())
+                                m_socksListener->queueTask(m_socksSession->getBeaconHash(), c2MessageToSend);
+                        }
                         ...
 
 }
@@ -892,7 +892,7 @@ These are the primary **gRPC instructions** exposed by the TeamServer to perform
 
 **Purpose:** retrieve a credential from the credential store.
 
-### 8) `SocksInstruction_` — `"socks"`
+### `SocksInstruction_` — `"socks"`
 
 **Purpose:** endpoint to manage SOCKS5 service(s) provided by the TeamServer (start/bind/stop a socks proxy). This is the entry point for socks management.
 
