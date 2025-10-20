@@ -40,7 +40,11 @@ This series assumes:
 
 I’ll break the work into focused posts so each article is deep and thorough.
 
-### Part 1 — TeamServer & Architecture (next post)
+### Part 0 — Part 0 — SetUp and Basic Usage
+
+* How to set up and launch a first linux beacon
+
+### Part 1 — TeamServer & Architecture
 
 * Build system
 * Messagerie choices
@@ -81,4 +85,6 @@ This series will be practical, code-centric. The next post (TeamServer internals
 
 If there’s a specific angle you want me to prioritize (deep dive on a particular transport, UI automation, or implant persistence mechanics), tell me which one and I’ll fold it into the schedule.
 
-Ready? Here is [Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).
+[Part 0 — SetUp and Basic Usage](./Part0SetUpAndBasicUsage.md)  
+[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).
+
