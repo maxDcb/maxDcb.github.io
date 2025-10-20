@@ -196,7 +196,7 @@ c2client
 
 At the start of the client, some basic script are executed, to launch a listener in port 8443 and loadmodule ListDirectory in case of beacon connection.
 
-![alt text](basicScripts.png)
+![alt text](media/basicScripts.png)
 
 ---
 

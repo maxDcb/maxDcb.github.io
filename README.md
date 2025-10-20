@@ -14,7 +14,7 @@ Welcome to my technical blog repository. This space is dedicated to sharing my p
 - [OpenShiftGrapher](./OpenShiftGrapher/): Visualizing & Securing Your OpenShift Cluster
 - How I gave life to [Data](./DataAgent/) my C2 agent
 - [BuildingAModernC2](./BuildingAModernC2/): A series of technical posts about **C2TeamServer**
-- - [Part 0 — SetUp and Basic Usage](./Part0SetUpAndBasicUsage.md)  
+- - [Part 0 — SetUp and Basic Usage](./BuildingAModernC2/Part0SetUpAndBasicUsage.md)  
 - - [Part 1 — TeamServer & Architecture](./BuildingAModernC2/Part1TeamServerAndArchitecture.md) the **TeamServer**
 
 
