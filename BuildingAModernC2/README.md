@@ -51,24 +51,23 @@ I’ll break the work into focused posts so each article is deep and thorough.
 * Handling of listeners
 * Interaction with modules
 
-### Part 2 — Listeners & network design
-
-* How listeners are implemented and why (HTTP/HTTPS, DNS, TCP raw, named pipes)
-
-### Part 3 — GUI & operator workflows
+### Part 2 — GUI & operator workflows
 
 * GUI design goals
+* Explaination of each functionalities
 * Why I choose python with modularity in mind
 
-### Part 4 — Implant design, channels & steal strategies
+### Part 3 — Beacons & Listeners
 
 * Implant architecture
 * Channel implementations
 * “Steal” strategies
 
-### Part 5 — Modules ?
+### Part 4 — Modules 
 
-* I don't know yet
+* Template
+* implementation chooses
+* “Steal” strategies
 
 ---
 
@@ -86,5 +85,6 @@ This series will be practical, code-centric. The next post (TeamServer internals
 If there’s a specific angle you want me to prioritize (deep dive on a particular transport, UI automation, or implant persistence mechanics), tell me which one and I’ll fold it into the schedule.
 
 [Part 0 — SetUp and Basic Usage](./Part0SetUpAndBasicUsage.md)  
-[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).
+[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).  
+[Part 2 — GUI](./Part2Gui.md).
 

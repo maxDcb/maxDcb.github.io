@@ -1,6 +1,6 @@
 # Part 1 — TeamServer & Architecture
 
-This is **Part 1** of a short series on **C2TeamServer** — a modular Command-and-Control framework I maintain at `https://github.com/maxDcb/C2TeamServer`.
+This is **Part 1** of a short series on **ExplorationC2** — a modular Command-and-Control framework I maintain at `https://github.com/maxDcb/C2TeamServer`.
 In this post I describe the **TeamServer** core: how it is built, how it communicates with clients, how listeners and modules are organised, and which configuration knobs control its behaviour. This is the architectural foundation; later posts will dive into listeners, the GUI, and implants.
 
 ---
@@ -14,7 +14,7 @@ In this post I describe the **TeamServer** core: how it is built, how it communi
 
 ---
 
-## 🛠️ uild & dependency management — Conan + CMake
+## 🛠️ Build & dependency management — Conan + CMake
 
 The project is composed of several submodules that provide reusable code used across the repository (for example by the beacon):
 
@@ -935,5 +935,5 @@ This layered architecture: **TeamServer in a secured internal environment**, **p
 
 ## What’s next
 
-In Part 2 we’ll deep-dive into **Listeners**:
+[Part 2 — GUI](./Part2Gui.md).
 

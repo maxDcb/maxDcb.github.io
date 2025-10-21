@@ -25,9 +25,20 @@ tar xf C2TeamServer.tar.gz -C C2TeamServer --strip-components=1
 
 # verify
 ls -lh C2TeamServer
+total 36K
+drwxr-xr-x 2 root root 4.0K Oct 20 04:29 LinuxBeacons
+drwxr-xr-x 2 root root 4.0K Oct 20 04:29 LinuxModules
+drwxr-xr-x 2 root root 4.0K Oct 16 07:33 Scripts
+drwxr-xr-x 3 root root 4.0K Oct 20 04:29 TeamServer
+drwxr-xr-x 2 root root 4.0K Oct 20 04:29 TeamServerModules
+drwxr-xr-x 2 root root 4.0K Oct 16 07:33 Tools
+drwxr-xr-x 2 root root 4.0K Oct 20 04:29 WindowsBeacons
+drwxr-xr-x 2 root root 4.0K Oct 20 04:29 WindowsModules
+drwxr-xr-x 2 root root 4.0K Oct 16 07:33 www
+
 ```
 
-You should see a `TeamServer/` directory (and other folders) under `C2TeamServer`.
+You should see a `TeamServer/` directory.
 
 ---
 
@@ -239,4 +250,5 @@ chmod +x BeaconHttp
 
 ## Next
 
-[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).
+[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).  
+[Part 2 — GUI](./Part2Gui.md).
