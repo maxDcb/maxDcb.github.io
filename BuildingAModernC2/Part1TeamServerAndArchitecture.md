@@ -935,6 +935,6 @@ This layered architecture: **TeamServer in a secured internal environment**, **p
 
 ## What’s next
 
-[Part 2 — GUI](./Part2Gui.md).
-[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).
+[Part 2 — GUI](./Part2Gui.md).  
+[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).  
 

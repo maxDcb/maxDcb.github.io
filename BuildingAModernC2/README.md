@@ -86,6 +86,6 @@ If there’s a specific angle you want me to prioritize (deep dive on a particul
 
 [Part 0 — SetUp and Basic Usage](./Part0SetUpAndBasicUsage.md)  
 [Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).  
-[Part 2 — GUI](./Part2Gui.md).
-[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).
+[Part 2 — GUI](./Part2Gui.md).  
+[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).  
 

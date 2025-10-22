@@ -384,4 +384,4 @@ def consoleAssistantMethod(self, action, beaconHash, listenerHash, context, cmd,
 
 ## What’s next
 
-TODO
+[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).  
