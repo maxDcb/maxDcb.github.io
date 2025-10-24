@@ -18,6 +18,7 @@ Welcome to my technical blog repository. This space is dedicated to sharing my p
 - - [Part 1 — TeamServer & Architecture](./BuildingAModernC2/Part1TeamServerAndArchitecture.md)
 - - [Part 2 — GUI](./BuildingAModernC2/Part2Gui.md). 
 - - [Part 3 — Beacons And Listeners](./BuildingAModernC2/Part3BeaconsAndListeners.md).
+- - [Part 4 — Modules](./BuildingAModernC2/Part4Modules.md).  
 
 
 ---
