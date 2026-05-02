@@ -5,7 +5,7 @@ title: "Building a Modern C2: Introduction"
 date: 2025-10-14
 category: c2
 series: "Building a Modern C2"
-tags: [c2, architecture, red-team, exploration-c2]
+tags: [c2, architecture, authorized-research, exploration-c2]
 description: "Introduction and roadmap for the Building a Modern C2 series on Exploration C2."
 permalink: /BuildingAModernC2/
 ---

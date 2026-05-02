@@ -1,6 +1,6 @@
-# MaxDcb Research Blog
+# MaxDcb Research
 
-Repository for [maxdcb.github.io](https://maxdcb.github.io/), a technical blog covering offensive security tooling, C2 engineering, malware development, and cloud security research.
+Repository for [maxdcb.github.io](https://maxdcb.github.io/), a technical blog covering offensive security engineering, C++ security tooling, Windows internals, AppSec, and lab-oriented security research.
 
 The public site is structured as a lightweight Jekyll blog:
 

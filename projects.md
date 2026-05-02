@@ -7,12 +7,12 @@ description: Map of the main public projects documented on the blog.
 
 # Projects
 
-This page maps the public projects behind the articles and shows how they connect.
+This page maps the public projects behind the articles and shows how they connect in a lab-oriented security research context.
 
 <div class="project-grid">
   <section class="project-card">
     <h2><a href="https://github.com/maxDcb/C2TeamServer">C2TeamServer</a></h2>
-    <p>TeamServer and Python client for the Exploration C2 framework. This is the central repository for releases, packaging, operator workflows, and the GUI.</p>
+    <p>TeamServer and Python client for the Exploration C2 lab framework. This is the central repository for releases, packaging, workflow design, and the GUI.</p>
   </section>
 
   <section class="project-card">
@@ -22,17 +22,17 @@ This page maps the public projects behind the articles and shows how they connec
 
   <section class="project-card">
     <h2><a href="https://github.com/maxDcb/C2Implant">C2Implant</a></h2>
-    <p>Windows C++ beacon implementation, modules, and transport implementations for Exploration C2.</p>
+    <p>Windows C++ research component for studying runtime modules, transport abstractions, and client/server contracts in controlled labs.</p>
   </section>
 
   <section class="project-card">
     <h2><a href="https://github.com/maxDcb/C2LinuxImplant">C2LinuxImplant</a></h2>
-    <p>Linux C++ beacon implementation and Linux module packaging for the same framework.</p>
+    <p>Linux C++ research component and Linux module packaging for the same lab framework.</p>
   </section>
 
   <section class="project-card">
     <h2><a href="https://github.com/maxDcb/DreamWalkers">DreamWalkers</a></h2>
-    <p>Reflective shellcode loader with stack unwinding metadata registration, stack spoofing research, and CLR payload support.</p>
+    <p>Windows internals and PE loading research around reflective loading, stack unwinding metadata registration, and CLR runtime behavior.</p>
   </section>
 
   <section class="project-card">
@@ -47,4 +47,4 @@ This page maps the public projects behind the articles and shows how they connec
 - [libSocketHandler](https://github.com/maxDcb/libSocketHandler): TCP communication helpers.
 - [libPipeHandler](https://github.com/maxDcb/libPipeHandler): SMB and named pipe communication helpers.
 - [libSocks5](https://github.com/maxDcb/libSocks5): SOCKS5 support used for pivoting workflows.
-- [PeDropper](https://github.com/maxDcb/PeDropper), [PeInjectorSyscall](https://github.com/maxDcb/PeInjectorSyscall), and [EarlyCascade](https://github.com/maxDcb/EarlyCascade): loader and injection experiments around Windows payload delivery.
+- [PeDropper](https://github.com/maxDcb/PeDropper), [PeInjectorSyscall](https://github.com/maxDcb/PeInjectorSyscall), and [EarlyCascade](https://github.com/maxDcb/EarlyCascade): Windows loader and process-internals experiments for controlled lab research.

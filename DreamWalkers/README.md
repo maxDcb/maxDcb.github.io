@@ -3,9 +3,9 @@ layout: post
 article: true
 title: "DreamWalkers"
 date: 2025-10-14
-category: malware-development
-tags: [windows, shellcode, reflective-loading, stack-spoofing, clr]
-description: "Research notes on DreamWalkers, a reflective shellcode loader with unwind metadata registration, stack spoofing, and CLR payload support."
+category: windows-internals
+tags: [windows-internals, pe-loading, reflective-loading, stack-unwinding, clr]
+description: "Research notes on DreamWalkers, a reflective PE loading study with unwind metadata registration, stack behavior analysis, and CLR runtime support."
 permalink: /DreamWalkers/
 ---
 
