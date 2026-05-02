@@ -10,6 +10,14 @@ theme: jekyll-theme-hacker
 markdown: kramdown
 permalink: pretty
 
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+feed:
+  path: /posts.xml
+
 defaults:
   - scope:
       path: ""
