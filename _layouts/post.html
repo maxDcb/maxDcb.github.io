@@ -1,0 +1,27 @@
+---
+layout: default
+---
+
+<article class="post">
+  <div class="post-meta">
+    {% if page.date %}
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time>
+    {% endif %}
+    {% if page.series %}
+      <span>{{ page.series }}</span>
+    {% endif %}
+    {% if page.category %}
+      <span>{{ page.category }}</span>
+    {% endif %}
+  </div>
+
+  {{ content }}
+
+  {% if page.tags %}
+    <footer class="post-tags" aria-label="Tags">
+      {% for tag in page.tags %}
+        <span>{{ tag }}</span>
+      {% endfor %}
+    </footer>
+  {% endif %}
+</article>

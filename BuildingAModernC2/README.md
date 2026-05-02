@@ -1,6 +1,18 @@
-# Building a Modern C2 — Introduction to the series
+---
+layout: post
+article: true
+title: "Building a Modern C2: Introduction"
+date: 2025-10-14
+category: c2
+series: "Building a Modern C2"
+tags: [c2, architecture, red-team, exploration-c2]
+description: "Introduction and roadmap for the Building a Modern C2 series on Exploration C2."
+permalink: /BuildingAModernC2/
+---
 
-I’m starting a series of technical posts about my Command-and-Control (C2) framework **C2TeamServer** (repo: [https://github.com/maxDcb/C2TeamServer](https://github.com/maxDcb/C2TeamServer)). Over the next articles I’ll walk through the project end-to-end: the **teamserver architecture and listeners**, the **GUI and operator workflows**, the **implants channels and modules stealth strategies**. This first post is a roadmap: what the project is, why I built it, and what I will present in upcoming posts.
+# Building a Modern C2 - Introduction to the Series
+
+I’m starting a series of technical posts about my Command-and-Control (C2) framework **C2TeamServer** (repo: [https://github.com/maxDcb/C2TeamServer](https://github.com/maxDcb/C2TeamServer)). Over the next articles I’ll walk through the project end-to-end: the **teamserver architecture and listeners**, the **GUI and operator workflows**, the **implant channels**, and the **module stealth strategies**. This first post is a roadmap: what the project is, why I built it, and what I will present in upcoming posts.
 
 ---
 
@@ -12,15 +24,15 @@ I started this project after taking the CRTO and experimenting with tools like C
 
 ---
 
-## What is **C2TeamServer** 
+## What is **C2TeamServer**
 
 **C2TeamServer** is my modular C2 framework. At a high level it consists of:
 
-* **TeamServer** — the central controller that manages listeners, manages sessions, routes messages, and distribute task/output.
-* **Listeners** — network endpoints (HTTP, HTTPS, DNS, SMB, etc.) that accept inbound connections from implants. Listeners easy to develop, pluggable and configurable.
-* **Implants** — agents that connect back to listeners, handles modules to execute tasks (system operation, file transfer, process injection, etc.).
+* **TeamServer** — the central controller that manages listeners and sessions, routes messages, and distributes tasks/output.
+* **Listeners** — network endpoints (HTTP, HTTPS, DNS, SMB, etc.) that accept inbound connections from implants. Listeners are easy to develop, pluggable, and configurable.
+* **Implants** — agents that connect back to listeners and handle modules that execute tasks (system operations, file transfer, process injection, etc.).
 * **GUI** — a desktop interface to interact with the server, visualize active sessions, author tasks, manage droppers and more.
-* **Modules** — small, testable components (e.g., file transfer, lateral movement, commands) that will be the action executed by an implant.
+* **Modules** — small, testable components (e.g., file transfer, lateral movement, commands) that provide the actions executed by an implant.
 
 The repo is organized to favor **modularity**.
 
@@ -30,7 +42,7 @@ The repo is organized to favor **modularity**.
 
 This series assumes:
 
-* Intermediate knowledge of systems programming (principaly C/C++).
+* Intermediate knowledge of systems programming (primarily C/C++).
 * Familiarity with Linux/Windows internals (processes, tokens, networking).
 * Comfort reading code, running local labs.
 
@@ -40,34 +52,34 @@ This series assumes:
 
 I’ll break the work into focused posts so each article is deep and thorough.
 
-### Part 0 — Part 0 — SetUp and Basic Usage
+### Part 0 - Setup and Basic Usage
 
-* How to set up and launch a first linux beacon
+* How to set up and launch a first Linux beacon
 
 ### Part 1 — TeamServer & Architecture
 
 * Build system
-* Messagerie choices
+* Messaging choices
 * Handling of listeners
 * Interaction with modules
 
 ### Part 2 — GUI & operator workflows
 
 * GUI design goals
-* Explaination of each functionalities
-* Why I choose python with modularity in mind
+* Explanation of each feature
+* Why I chose Python with modularity in mind
 
 ### Part 3 — Beacons & Listeners
 
 * Implant architecture
 * Channel implementations
-* “Steal” strategies
+* Stealth strategies
 
-### Part 4 — Modules 
+### Part 4 — Modules
 
 * Template
-* implementation chooses
-* “Steal” strategies
+* Implementation choices
+* Stealth strategies
 
 ---
 
@@ -80,14 +92,12 @@ I’ll break the work into focused posts so each article is deep and thorough.
 
 ## Wrap up
 
-This series will be practical, code-centric. The next post (TeamServer internals and configuration) will dive into the codebase structure, key modules, and show the TeamServer boot flow.
+This series will be practical and code-centric. The next post (TeamServer internals and configuration) will dive into the codebase structure, key modules, and show the TeamServer boot flow.
 
 If there’s a specific angle you want me to prioritize (deep dive on a particular transport, UI automation, or implant persistence mechanics), tell me which one and I’ll fold it into the schedule.
 
-[Part 0 — SetUp and Basic Usage](./Part0SetUpAndBasicUsage.md)  
-[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).  
-[Part 2 — GUI](./Part2Gui.md).  
-[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).  
-[Part 4 — Modules](./Part4Modules.md).  
-
-
+- [Part 0 - Setup and Basic Usage](./Part0SetUpAndBasicUsage.html)
+- [Part 1 - TeamServer and Architecture](./Part1TeamServerAndArchitecture.html)
+- [Part 2 - GUI](./Part2Gui.html)
+- [Part 3 - Beacons and Listeners](./Part3BeaconsAndListeners.html)
+- [Part 4 - Modules](./Part4Modules.html)

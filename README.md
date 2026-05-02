@@ -1,29 +1,12 @@
-# Max's Research Blog
+# MaxDcb Research Blog
 
-Welcome to my technical blog repository. This space is dedicated to sharing my personal research, proof-of-concepts, and tooling related to:
+Repository for [maxdcb.github.io](https://maxdcb.github.io/), a technical blog covering offensive security tooling, C2 engineering, malware development, and cloud security research.
 
-- 🛠️ Penetration Testing & Red Teaming
-- 🧬 Malware Development
+The public site is structured as a lightweight Jekyll blog:
 
----
-
-## ✒️ Topics
-
-- My work on shellcode reflective loader [DreamWalkers](./DreamWalkers/)
-- How [Codex](./Codex/) powered up my command-and-control development
-- [OpenShiftGrapher](./OpenShiftGrapher/): Visualizing & Securing Your OpenShift Cluster
-- How I gave life to [Data](./DataAgent/) my C2 agent
-- [BuildingAModernC2](./BuildingAModernC2/): A series of technical posts about **C2TeamServer**
-- - [Part 0 — SetUp and Basic Usage](./BuildingAModernC2/Part0SetUpAndBasicUsage.md)  
-- - [Part 1 — TeamServer & Architecture](./BuildingAModernC2/Part1TeamServerAndArchitecture.md)
-- - [Part 2 — GUI](./BuildingAModernC2/Part2Gui.md). 
-- - [Part 3 — Beacons And Listeners](./BuildingAModernC2/Part3BeaconsAndListeners.md).
-- - [Part 4 — Modules](./BuildingAModernC2/Part4Modules.md).  
-
-
----
-
-## 🔗 Contact
-
-Feel free to open an issue or reach out if you're interested in exchanging ideas.
-
+- [Articles](./index.md)
+- [Projects](./projects.md)
+- [About](./about.md)
+- [Building a Modern C2](./BuildingAModernC2/)
+- [DreamWalkers](./DreamWalkers/)
+- [OpenShiftGrapher](./OpenShiftGrapher/)

@@ -1,26 +1,37 @@
+---
+layout: post
+article: true
+title: "DreamWalkers"
+date: 2025-10-14
+category: malware-development
+tags: [windows, shellcode, reflective-loading, stack-spoofing, clr]
+description: "Research notes on DreamWalkers, a reflective shellcode loader with unwind metadata registration, stack spoofing, and CLR payload support."
+permalink: /DreamWalkers/
+---
+
 # DreamWalkers
 
-Unlike traditional call stack spoofing, which often fails within reflectively loaded modules due to missing unwind metadata, DreamWalkers introduces a novel approach that enables clean and believable call stacks even during execution of reflectivly loaded modules. By parsing the PE structure and manually registering unwind information via **`RtlAddFunctionTable`**, our loader restores proper stack unwinding — a capability that I didn't see achieved in reflective loading contexts. This allows our shellcode to blend in more effectively, even under the scrutiny of modern EDR and debugging tools.
+Unlike traditional call stack spoofing, which often fails within reflectively loaded modules due to missing unwind metadata, DreamWalkers introduces a novel approach that enables clean and believable call stacks even during execution of reflectively loaded modules. By parsing the PE structure and manually registering unwind information via **`RtlAddFunctionTable`**, our loader restores proper stack unwinding — a capability that I didn't see achieved in reflective loading contexts. This allows our shellcode to blend in more effectively, even under the scrutiny of modern EDR and debugging tools.
 
-Here is the stack trace of a simple shellcode injection, showing a Donut-generated shellcode and a DreamWalker-generated shellcode side by side:
+Here is the stack trace of a simple shellcode injection, showing a Donut-generated shellcode and a DreamWalkers-generated shellcode side by side:
 
 ``` bash
 donut -p "Hello from Donut" -j "C:\\Windows\\system32\\Windows.Storage.dll" -i implant.exe
 ```
 
-![](./images/Donut.png)
+![Donut-generated shellcode stack trace](./images/Donut.png)
 
 
 ``` bash
 python3 GenerateShellcode.py -f implant.exe -c "Hello from DreamWalkers"
 ```
 
-![](./images/DreamWalkers.png) 
+![DreamWalkers-generated shellcode stack trace](./images/DreamWalkers.png)
 
 
 Code can be found here: [DreamWalkers](https://github.com/maxDcb/DreamWalkers)
 
-Thanks to [almounah](https://github.com/almounah) for his help, even if he lost his way with go!
+Thanks to [almounah](https://github.com/almounah) for his help, even if he lost his way with Go!
 
 ---
 
@@ -39,7 +50,7 @@ Once that was working, I created a Python script to generate loader shellcode th
 
 Since **MemoryModule** doesn’t support command-line argument passing, I implemented that functionality as well.
 
-Later, I added **.NET (CLR) payload support**, using a different approach than Donut. Instead of relying on the shellcode loader direclty I rather load a dotnet loader that at its turn do the dotnet module loading. I used a C++ implmentation of [Being-A-Good-CLR-Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host). I found this implmentation more flexible.
+Later, I added **.NET (CLR) payload support**, using a different approach than Donut. Instead of relying on the shellcode loader directly, I load a .NET loader that then loads the .NET module. I used a C++ implementation of [Being-A-Good-CLR-Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host), and I found this implementation more flexible.
 
 Finally, I wanted the loader to have a **clean and spoofed call stack**, which led to what I believe is a **novel technique** — or at least an original combination of multiple known techniques (call stack spoofing and module stomping) — that makes the stack look much more legitimate during execution, even for reflectively loaded modules.
 
@@ -47,7 +58,7 @@ This page walks through each step of the process described above, exploring the 
 
 ---
 
-## A position-independent implementation of MemoryModule 
+## A position-independent implementation of MemoryModule
 
 
 **MemoryModule** was not originally designed to be position-independent. To make it suitable for use as shellcode, several constraints must be addressed:
@@ -68,7 +79,7 @@ Finally, to access required Windows APIs, we implement classic `GetProcAddress`/
 
 ### Resources
 
-[writing-optimized-windows-shellcode-in-c](https://web.archive.org/web/20210305190309/http://www.exploit-monday.com/2013/08/writing-optimized-windows-shellcode-in-c.html)   
+[writing-optimized-windows-shellcode-in-c](https://web.archive.org/web/20210305190309/http://www.exploit-monday.com/2013/08/writing-optimized-windows-shellcode-in-c.html)
 [Donut - inmem_pe.c](https://github.com/TheWover/donut/blob/master/loader/inmem_pe.c)
 
 ---
@@ -81,9 +92,9 @@ The logical next step was to implement the **shellcode generator** that creates 
 The final combined layout looks roughly like this:
 
 ```
--- Jump after Input structure -- 
+-- Jump after Input structure --
 -- Input structure --
--- Shellcode stub - put the Input struc in rcx & aligment --
+-- Shellcode stub - put the input struct in rcx and align the stack --
 -- MemoryModule shellcode --
 -- Module to load #1 --
 -- Module to load #2 - if dotnet --
@@ -100,9 +111,9 @@ The final combined layout looks roughly like this:
 
 MemoryModule did not handle command line arguments, which makes sense since it was primarily designed to load DLLs — although it can also load EXEs. In practice, the EXE we load inherits the command line from the currently running module, accessed via `GetCommandLineW` (which reads the value stored in the PEB) and `GetCommandLineA` (which computes the value at runtime, but not necessarily on demand).
 
-To support custom command lines, we needed to redirect all reference to the pointers returned by these two functions to point to our own buffer, where we store the command line provided in the input structure.
+To support custom command lines, we needed to redirect all references to the pointers returned by these two functions to point to our own buffer, where we store the command line provided in the input structure.
 
-This is done in memoryModule/memoryModule.c/SetCommandLineSimple.
+This is done in `memoryModule/memoryModule.c/SetCommandLineSimple`.
 
 ---
 
@@ -119,7 +130,7 @@ I believe this trade-off is worthwhile. It allows us to:
 * Implement more advanced loading logic,
 * Swap or update the .NET loader quickly to adapt evasion techniques.
 
-In this project, I used a C++ implementation of **Being-A-Good-CLR-Host**, along with basic ETW patching for stealth (and go good results with EDR). We use the "go" function exposed by dotnetLoader/DotnetExec.cpp that take the ptr to the module to load, its size and the command line to execute.
+In this project, I used a C++ implementation of **Being-A-Good-CLR-Host**, along with basic ETW patching for stealth, and got good results against EDRs. We use the "go" function exposed by `dotnetLoader/DotnetExec.cpp`; it takes a pointer to the module to load, its size, and the command line to execute.
 
 ``` python
 #
@@ -142,17 +153,17 @@ shellcode += b'\x59'
 shellcode += MEMORYMODULE_EXE_X64
 
 if isDotNet:
-    # If it's a .NET executable, append the dotnetLoader - a dll
+    # If it's a .NET executable, append the dotnetLoader - a DLL
     shellcode += dotnetLoader
 
-# the module to finaly load
+# the module to finally load
 shellcode += peBinary
 ```
 
 ### Resources
 
-[Being a good CLR host](https://www.ibm.com/think/x-force/being-a-good-clr-host-modernizing-offensive-net-tradecraft?mhsrc=ibmsearch_a&mhq=being%20a%20good%20clr%20host)  
-[passthehashbrowns Being-A-Good-CLR-Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host)  
+[Being a good CLR host](https://www.ibm.com/think/x-force/being-a-good-clr-host-modernizing-offensive-net-tradecraft?mhsrc=ibmsearch_a&mhq=being%20a%20good%20clr%20host)
+[passthehashbrowns Being-A-Good-CLR-Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host)
 [almounah go-buena-clr](https://github.com/almounah/go-buena-clr)
 
 ---
@@ -160,7 +171,7 @@ shellcode += peBinary
 ## I want a clean stack and not just when I sleep !!!
 
 
-### stack spoofing
+### Stack spoofing
 
 
 I spent a lot of time banging my head against **call stack spoofing**. I was pretty disappointed to realize that it only worked reliably when the beacon was idle. Of course, that makes sense — most C2 beacons spend a lot of time idle — but it was frustrating nonetheless.
@@ -169,9 +180,9 @@ While experimenting with integrating **LoudSunRun** into my project, I wanted my
 
 What happens when you spoof the stack and then enter a function for which Windows has no unwind information:
 
-![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png) 
+![WinDbg stack trace without RtlAddFunctionTable](./images/WindbgWithoutMS_RtlAddFunctionTable_stack2.png)
 
-![](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png)
+![WinDbg stack trace without registered unwind metadata](./images/WindbgWithoutMS_RtlAddFunctionTable_stack3.png)
 
 Eventually, I asked ChatGPT to summarize what I had learned and explain why spoofing doesn't work properly with reflectively loaded modules. It gave me this answer:
 
@@ -204,7 +215,7 @@ And that’s when it clicked: **`RtlAddFunctionTable`**.
 
 I already had all the PE sections mapped into memory — so why not use them to register my own unwind info? That’s what made proper stack spoofing **finally work**, even for reflectively loaded modules.
 
-Hope giving credit to my GPT will give me points for the future AI uprising.
+I hope giving credit to my GPT will give me points for the future AI uprising.
 
 ``` c++
 //
@@ -217,9 +228,9 @@ inst->api.RtlAddFunctionTable(result->pdataStart, functionCount, (DWORD64)result
 
 What happens when you spoof the stack and then enter a function for which Windows has actual unwind information:
 
-![](./images/WindbgWithoutMS_stack2.png)
+![WinDbg stack trace with registered unwind metadata](./images/WindbgWithoutMS_stack2.png)
 
-![](./images/WindbgWithoutMS_stack3.png)
+![WinDbg clean stack after unwind metadata registration](./images/WindbgWithoutMS_stack3.png)
 
 In this case, Windows has the necessary unwind information for the function, allowing stack unwinding to proceed smoothly.
 
@@ -236,19 +247,18 @@ What I observed is that **the `.pdata` I registered via `RtlAddFunctionTable` is
 ![CleanStack](./images/CleanStack.png)
 
 
-### Resources:
+### Resources
 
-[writing-a-debugger-from-scratch-part-6](https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-6/)  
-[SilentMoonwalk](https://github.com/klezVirus/SilentMoonwalk)  
-[Vulcan Raven](https://github.com/WithSecureLabs/CallStackSpoofer/)  
-[LoudSunRun](https://github.com/susMdT/LoudSunRun)  
+[writing-a-debugger-from-scratch-part-6](https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-6/)
+[SilentMoonwalk](https://github.com/klezVirus/SilentMoonwalk)
+[Vulcan Raven](https://github.com/WithSecureLabs/CallStackSpoofer/)
+[LoudSunRun](https://github.com/susMdT/LoudSunRun)
 
 ---
 
-## Improvement
+## Improvements
 
 - Replace function name strings with hashed values for reduced footprint.
 - Implement proxy API calls within the shellcode to enhance stealth.
 - Remove the original loader code after initialization to minimize memory artifacts.
 - Obfuscate module headers and magic bytes to evade static detection and signature-based scanners.
-

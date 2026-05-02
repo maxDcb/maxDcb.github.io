@@ -1,8 +1,19 @@
-# Data my C2 agent
+---
+layout: post
+article: true
+title: "Data: My C2 Agent"
+date: 2025-10-15
+category: c2
+tags: [c2, codex, openai, agent, gui]
+description: "How an OpenAI-backed assistant panel became an agent inside the Exploration C2 client."
+permalink: /DataAgent/
+---
+
+# Data: My C2 Agent
 
 After experimenting with Codex for some time, I implemented an agent for my [C2 framework](https://github.com/maxDcb/C2TeamServer).
 
-![alt text](./media/data.png)
+![Data assistant panel in the C2 client](./media/data.png)
 
 I already use the OpenAI API for experiments, so it was the natural first choice for prototyping. However, the architecture and principles presented here are platform-agnostic.
 
@@ -25,7 +36,7 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message["content"])
 ```
 
-![alt text](./media/NewTab.png)
+![New assistant tab in the C2 client](./media/NewTab.png)
 
 
 Messages are JSON-formatted objects that contain a role and a content field. One important detail is that the OpenAI chat API is stateless: you must manage conversation memory yourself. To provide context for a query, include the relevant messages in the messages array. The system prompt should always be the first message in the stack:
@@ -92,9 +103,9 @@ function_call = getattr(message, "function_call", None)
 
 When the model requests a function call, the response contains a function_call object. It is then the framework’s responsibility to execute the requested function.
 
-![alt text](./media/runls.png)
+![Agent requesting an ls tool call](./media/runls.png)
 
-![alt text](./media/ls.png)
+![Directory listing returned by the beacon](./media/ls.png)
 
 ## Making it run
 
@@ -110,11 +121,11 @@ def consoleAssistantMethod(self, action, beaconHash, listenerHash, context, cmd,
         return
 
     # cmd sent
-    command_text = cmd 
+    command_text = cmd
     ...
 
     # cmd result
-    output_text = result 
+    output_text = result
     ...
 
     if awaiting_result:
@@ -141,6 +152,6 @@ The resulting agent is capable of using the C2 as intended: it loads modules whe
 
 [![Watch the demo](./media/thumb.png)](./media/C2Agent.mp4)
 
-Code can be found [here](https://github.com/maxDcb/C2TeamServer/blob/develop/C2Client/C2Client/AssistantPanel.py)
+Code can be found [here](https://github.com/maxDcb/C2TeamServer/blob/develop/C2Client/C2Client/AssistantPanel.py).
 
 The remaining challenge is ensuring each tool always returns a well-formed, deterministic response, even when the underlying operation produces unexpected results, so the agent does not enter an indeterminate state.

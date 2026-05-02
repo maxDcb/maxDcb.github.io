@@ -1,7 +1,19 @@
-# Part 1 — TeamServer & Architecture
+---
+layout: post
+article: true
+title: "Building a Modern C2 - Part 1: TeamServer and Architecture"
+date: 2025-10-20
+category: c2
+series: "Building a Modern C2"
+tags: [c2, teamserver, architecture, grpc, cmake, conan]
+description: "The TeamServer architecture behind Exploration C2: build system, configuration, gRPC, listeners, modules, and SOCKS support."
+permalink: /BuildingAModernC2/Part1TeamServerAndArchitecture.html
+---
+
+# Part 1 - TeamServer and Architecture
 
 This is **Part 1** of a short series on **ExplorationC2** — a modular Command-and-Control framework I maintain at `https://github.com/maxDcb/C2TeamServer`.
-In this post I describe the **TeamServer** core: how it is built, how it communicates with clients, how listeners and modules are organised, and which configuration knobs control its behaviour. This is the architectural foundation; later posts will dive into listeners, the GUI, and implants.
+In this post I describe the **TeamServer** core: how it is built, how it communicates with clients, how listeners and modules are organized, and which configuration knobs control its behavior. This is the architectural foundation; later posts will dive into listeners, the GUI, and implants.
 
 ---
 
@@ -16,9 +28,9 @@ In this post I describe the **TeamServer** core: how it is built, how it communi
 
 ## 🛠️ Build & dependency management — Conan + CMake
 
-The project is composed of several submodules that provide reusable code used across the repository (for example by the beacon):
+The project is composed of several submodules that provide reusable code across the repository, including code used by the beacon:
 
-* **[C2Core](https://github.com/maxDcb/C2Core)** — one of the most important components; it contains the implementation of modules, beacons and listeners.
+* **[C2Core](https://github.com/maxDcb/C2Core)** — one of the most important components; it contains the implementation of modules, beacons, and listeners.
 * **[libDns](https://github.com/maxDcb/libDnsCommunication)** — DNS communication support.
 * **[libSocketHandler](https://github.com/maxDcb/libSocketHandler)** — TCP communication helpers.
 * **[libSocks5](https://github.com/maxDcb/libSocks5)** — SOCKS5 implementation.
@@ -28,7 +40,7 @@ Third-party utilities used by the project:
 * **[cpp-base64](https://github.com/ReneNyffenegger/cpp-base64)** — base64 encoding/decoding.
 * **[Donut](https://github.com/TheWover/donut)** — a pivotal project that inspired parts of this work; used for `assemblyExec` functionality and others.
 * **[nlohmann/json](https://github.com/nlohmann/json)** — the JSON library used by the project (not included as a submodule).
-                                                                             
+
 To keep builds "friendly" (it's C++...) I use **Conan** for dependency management and **CMake** for the build.
 
 Example `conanfile.txt` (excerpt):
@@ -51,7 +63,7 @@ CMakeDeps
 ### Key libraries
 
 **gRPC**
-gRPC is the RPC framework that provides the TeamServer’s communication backbone with the client. It handles remote procedure calls via protobufs. Using gRPC gives automatic client/server codegen for multiple languages, simplifies streaming, and enforces a clear protobuf-defined contract between server and GUI. Note: it’s not used for the implant transport to keep the implant dependency minimal and lightweight.
+gRPC is the RPC framework that provides the TeamServer’s communication backbone with the client. It handles remote procedure calls via protobufs. Using gRPC gives automatic client/server code generation for multiple languages, simplifies streaming, and enforces a clear protobuf-defined contract between server and GUI. Note: it’s not used for the implant transport to keep the implant dependency minimal and lightweight.
 
 **Protobuf**
 Protocol Buffers is the serialization format and schema language used to define every message exchanged over gRPC.
@@ -121,7 +133,7 @@ TeamServer is configured with a JSON file (`TeamServerConfig.json`) that contain
   * **`ScriptsDirectoryPath`** — packaging/build scripts (examples: PowerShell or shell scripts used for dropper generation).
 
 ```bash
-└─$ tree 
+└─$ tree
 ├── LinuxBeacons
 │   ├── BeaconDns
 │   ├── BeaconHttp
@@ -192,9 +204,9 @@ TeamServer is configured with a JSON file (`TeamServerConfig.json`) that contain
 ```
 
 
-![alt text](media/configDemo1.png)
+![Configuration demo for exposed address selection](media/configDemo1.png)
 
-![alt text](media/configDemo2.png)
+![Configuration demo for listener generation](media/configDemo2.png)
 
 * **gRPC & TLS**
 
@@ -215,13 +227,13 @@ TeamServer exposes a **gRPC API** for clients. gRPC gives us:
 * Built-in streaming for long-running sessions and large file transfers.
 * Language-agnostic clients (the client could be C/C++, Go, Python, Nim...).
 
-All gRPC endpoints are protected by **TLS** and Authentication. Certificates are configured in the TeamServer config (see earlier).
+All gRPC endpoints are protected by **TLS** and authentication. Certificates are configured in the TeamServer config (see earlier).
 
 All procedures and messages between client and server are defined here: `libs/libGrpcMessages/src/TeamServerApi.proto`
 
 ```proto
 // Interface exported by the server.
-service TeamServerApi 
+service TeamServerApi
 {
   rpc Authenticate(AuthRequest) returns (AuthResponse) {}
 
@@ -255,13 +267,13 @@ message AuthResponse
 }
 
 
-message Response 
+message Response
 {
   ...
 }
 
 // message related to all Listener procedures
-message Listener 
+message Listener
 {
   string listenerHash = 1;
   string type = 2;
@@ -274,22 +286,22 @@ message Listener
   string beaconHash = 9;
 }
 
-message Session 
+message Session
 {
   ...
 }
 
-message Command 
+message Command
 {
   ...
 }
 
-message CommandResponse 
+message CommandResponse
 {
   ...
 }
 
-message TermCommand 
+message TermCommand
 {
   ...
 }
@@ -344,9 +356,9 @@ Each listener has:
 
 * `type` — transport (`http`, `https`, `dns`, `tcp`, `smb`, `namedpipe`, …).
 * `params` — IP, port, interface, domain, etc.
-* `optional param` — transport-specific settings (TLS profile, domain fronting options, jitter settings, etc.).
+* `optional params` — transport-specific settings (TLS profile, domain fronting options, jitter settings, etc.).
 
-![alt text](media/listeners.png)
+![Listeners panel showing active endpoints](media/listeners.png)
 
 The implementation uses standard C++ inheritance to abstract the communication layer from message and session handling:
 
@@ -372,7 +384,7 @@ Listeners are managed by the TeamServer using a list of running listeners: `m_li
 else if (type == ListenerHttpType)
 {
     json configHttp = m_config["ListenerHttpConfig"];
-    
+
     int localPort = listenerToCreate->port();
     string localHost = listenerToCreate->ip();
     std::shared_ptr<ListenerHttp> listenerHttp = make_shared<ListenerHttp>(localHost, localPort, configHttp, false);
@@ -387,7 +399,7 @@ else if (type == ListenerHttpType)
     else
     {
         m_logger->error("Error: AddListener Http {0}:{1}", localHost, std::to_string(localPort));
-    }   
+    }
 }
 ```
 
@@ -447,7 +459,7 @@ constexpr std::string_view mainKeyConfig = ".CRT$XCL";
 constexpr std::array<char, 29> _EncryptedKeyTraficEncryption_ = compileTimeXOR<29, 8>(_KeyTraficEncryption_, mainKeyConfig);
 
 Listener::Listener(const std::string& param1, const std::string& param2, const std::string& type)
-{   
+{
     ...
     // decrypt key
     std::string keyDecrypted(std::begin(_EncryptedKeyTraficEncryption_), std::end(_EncryptedKeyTraficEncryption_));
@@ -528,7 +540,7 @@ Benefits:
 * Add / replace modules without rebuilding TeamServer or restarting the process.
 * Allow implants to `FetchModule` on demand (reduces initial implant size and exposure).
 
-![alt text](media/ipconfig.png)
+![ipconfig module output in the C2 client](media/ipconfig.png)
 
 ### Module contract
 
@@ -584,22 +596,22 @@ At startup the TeamServer scans the configured `TeamServerModulesDirectoryPath` 
 Example module load in C++:
 
 ```cpp
-TeamServer::TeamServer(const nlohmann::json& config) 
+TeamServer::TeamServer(const nlohmann::json& config)
 {
     ...
     m_logger->info("TeamServer module directory path {0}", m_teamServerModulesDirectoryPath.c_str());
-    try 
+    try
     {
-        for (const auto& entry : fs::recursive_directory_iterator(m_teamServerModulesDirectoryPath)) 
+        for (const auto& entry : fs::recursive_directory_iterator(m_teamServerModulesDirectoryPath))
         {
-            if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".so") 
+            if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".so")
             {
                 m_logger->info("Trying to load {0}", entry.path().c_str());
 
-                // Load dynamicaly the library
+                // Load dynamically the library
                 void *handle = dlopen(entry.path().c_str(), RTLD_LAZY);
 
-                if (!handle) 
+                if (!handle)
                 {
                     m_logger->warn("Failed to load {0}", entry.path().c_str());
                     continue;
@@ -610,9 +622,9 @@ TeamServer::TeamServer(const nlohmann::json& config)
 
                 m_logger->info("Looking for constructor function {0}", funcName);
 
-                // call the constructor 
+                // call the constructor
                 constructProc construct = (constructProc)dlsym(handle, funcName.c_str());
-                if (construct == NULL) 
+                if (construct == NULL)
                 {
                     ...
                 }
@@ -629,22 +641,22 @@ TeamServer::TeamServer(const nlohmann::json& config)
 }
 ```
 
-```log                                                                                                     
-└─$ ./TeamServer                                                                                                      
-[2401-06-06 10:08:07.362] [TeamServer] [info] TeamServer logging initialized at debug level                        
-[2401-06-06 10:08:07.364] [TeamServer] [debug] TeamServer logging initialized at debug level           
-[2401-06-06 10:08:07.365] [TeamServer] [info] Authentication enabled for 2 user(s) using credentials file: auth_credentials.json                                                                                                            
-[2401-06-06 10:08:07.366] [TeamServer] [debug] TeamServer module directory path ../TeamServerModules/                                                                                                                                       
-[2401-06-06 10:08:07.367] [TeamServer] [debug] Trying to load ../TeamServerModules/libEvasion.so             
+```log
+└─$ ./TeamServer
+[2401-06-06 10:08:07.362] [TeamServer] [info] TeamServer logging initialized at debug level
+[2401-06-06 10:08:07.364] [TeamServer] [debug] TeamServer logging initialized at debug level
+[2401-06-06 10:08:07.365] [TeamServer] [info] Authentication enabled for 2 user(s) using credentials file: auth_credentials.json
+[2401-06-06 10:08:07.366] [TeamServer] [debug] TeamServer module directory path ../TeamServerModules/
+[2401-06-06 10:08:07.367] [TeamServer] [debug] Trying to load ../TeamServerModules/libEvasion.so
 [2401-06-06 10:08:07.367] [TeamServer] [debug] Looking for construtor function EvasionConstructor
 [2401-06-06 10:08:07.367] [TeamServer] [debug] Module libEvasion.so loaded
 [2401-06-06 10:08:07.367] [TeamServer] [debug] Trying to load ../TeamServerModules/libScreenShot.so
 [2401-06-06 10:08:07.368] [TeamServer] [debug] Looking for construtor function ScreenShotConstructor
-[2401-06-06 10:08:07.368] [TeamServer] [debug] Module libScreenShot.so loaded 
+[2401-06-06 10:08:07.368] [TeamServer] [debug] Module libScreenShot.so loaded
 ...
-[2401-06-06 10:08:07.404] [TeamServer] [debug] Module libChisel.so loaded                    
+[2401-06-06 10:08:07.404] [TeamServer] [debug] Module libChisel.so loaded
 [2401-06-06 10:08:07.404] [TeamServer] [info] Loaded 38 TeamServer module(s) from ../TeamServerModules/
-[2401-06-06 10:08:07.493] [TeamServer] [info] Team Server listening on 0.0.0.0:50051 
+[2401-06-06 10:08:07.493] [TeamServer] [info] Team Server listening on 0.0.0.0:50051
 ```
 
 We can request reloading of modules if one is added or updated:
@@ -718,7 +730,7 @@ int TeamServer::prepMsg(const std::string& input, C2Message& c2Message, bool isW
     ...
     for (auto it = m_moduleCmd.begin(); it != m_moduleCmd.end(); ++it)
     {
-        if (toLower(instruction) == toLower((*it)->getName())) 
+        if (toLower(instruction) == toLower((*it)->getName()))
         {
             splitedCmd[0] = (*it)->getName();
             res = (*it)->init(splitedCmd, c2Message);
@@ -747,19 +759,19 @@ This modular and hot-swappable approach is a **core design principle** of the C2
 
 ## 🔀 SOCKS5 & Proxy Support
 
-In addition to classic listeners (HTTP, TCP, DNS, etc.), the TeamServer also supports a **SOCKS5 mode**, enabling operator traffic proxying and pivoting via connected implants. When a SOCKS5 is active, the TeamServer will accept incoming SOCKS5 client connections (e.g. from your attack workstation) and then forward the data through normal listeners to the implant living on the target network.
+In addition to classic listeners (HTTP, TCP, DNS, etc.), the TeamServer also supports a **SOCKS5 mode**, enabling operator traffic proxying and pivoting via connected implants. When SOCKS5 is active, the TeamServer accepts incoming SOCKS5 client connections (e.g., from your attack workstation) and then forwards the data through normal listeners to the implant living on the target network.
 
 The flow is:
 
-0. SOCKS5 server is started on the TeamServer, and is bind to an existing beacon.
+0. The SOCKS5 server is started on the TeamServer and bound to an existing beacon.
 1. An operator connects to the TeamServer’s SOCKS5, sending the SOCKS5 handshake and subsequent TCP relay requests.
-2. The TeamServer resolves or accepts the target host/port request and wraps that into a `C2Message` message forwarded to the realted session.
+2. The TeamServer resolves or accepts the target host/port request and wraps that into a `C2Message` message forwarded to the related session.
 3. The implant receives the request and opens a local socket to the destination, then relays data bi-directionally between that socket and the TeamServer via the same messaging channel.
 4. Data is streamed transparently, so the operator sees target-side traffic as though they were directly connected.
 
-This SOCKS5 functionality leverages the same listener/message infrastructure used for other tasks: request encryption, and multiplexing are reused. Because it's integrated at the listener/session layer, it inherits the same as other messages.
+This SOCKS5 functionality leverages the same listener/message infrastructure used for other tasks: request encryption and multiplexing are reused. Because it is integrated at the listener/session layer, it inherits the same routing and encryption behavior as other messages.
 
-![alt text](media/socks.png)
+![SOCKS5 pivoting workflow in the C2 client](media/socks.png)
 
 ```c++
 grpc::Status TeamServer::SendTermCmd(grpc::ServerContext* context, const teamserverapi::TermCommand* command,  teamserverapi::TermCommand* response)
@@ -788,9 +800,9 @@ grpc::Status TeamServer::SendTermCmd(grpc::ServerContext* context, const teamser
                         {
                             std::shared_ptr<Session> session = m_listeners[i]->getSessionPtr(kk);
                             std::string hash = session->getBeaconHash();
-                            if (hash.find(beaconHash) != std::string::npos && !session->isSessionKilled()) 
+                            if (hash.find(beaconHash) != std::string::npos && !session->isSessionKilled())
                             {
-                                // Set the socksListener to the Listener witht the connection to the beacon
+                                // Set the socksListener to the Listener with the connection to the beacon
                                 m_socksListener = m_listeners[i];
 
                                 // Set the socksSession to the session related to the target beacon
@@ -816,7 +828,7 @@ void TeamServer::socksThread()
     {
 
         C2Message c2Message = m_socksListener->getSocksTaskResult(m_socksSession->getBeaconHash());
-        
+
         ...
 
                 else if(state == SocksState::RUN)
@@ -829,7 +841,7 @@ void TeamServer::socksThread()
                         m_logger->debug("Socks5 {}: data received from beacon", id);
 
                         dataIn=c2Message.data();
-                    
+
                         // Connected to the tool using the socks server, ex: proxychain rdesktop...
                         int res = tunnel->process(dataIn, dataOut);
 
@@ -854,7 +866,7 @@ void TeamServer::socksThread()
 SOCKS5 support relies on a **custom [implementation](https://github.com/maxDcb/libSocks5)** that was developed as an independent library.
 This design allows the SOCKS5 component to be **reused outside of the C2 framework**, for example in standalone tooling, operator workstations, or other network pivoting setups.
 
-The library handles the SOCKS5 protocol stack: including handshake, authentication, and data forwarding and is designed to integrate cleanly with the TeamServer’s session and listener model. By separating the SOCKS5 logic from the C2 core, the implementation remains **modular**, **testable**, and **easy to maintain**.
+The library handles the SOCKS5 protocol stack, including handshake, authentication, and data forwarding, and is designed to integrate cleanly with the TeamServer’s session and listener model. By separating the SOCKS5 logic from the C2 core, the implementation remains **modular**, **testable**, and **easy to maintain**.
 
 ---
 
@@ -864,7 +876,7 @@ These are the primary **gRPC instructions** exposed by the TeamServer to perform
 
 ### `InfoListenerInstruction` — `"infoListener"`
 
-**Purpose:** return metadata about a listener (type, bind address, port, etc.). Useful for GUI for verifying listener configuration remotely.
+**Purpose:** return metadata about a listener (type, bind address, port, etc.). Useful for the GUI when verifying listener configuration remotely.
 
 ### `GetBeaconBinaryInstruction` — `"getBeaconBinary"`
 
@@ -884,9 +896,9 @@ These are the primary **gRPC instructions** exposed by the TeamServer to perform
 
 ### `AddCredentialInstruction` — `"addCred"`
 
-![alt text](media/credStore.png)
+![Credential store panel](media/credStore.png)
 
-**Purpose:** add credentials (username/password, NTLM hash, certificate, API token) into the TeamServer credential store for operator lookups. Used GUI side by some modules automaticaly.
+**Purpose:** add credentials (username/password, NTLM hash, certificate, API token) into the TeamServer credential store for operator lookups. Used GUI-side by some modules automatically.
 
 ### `GetCredentialInstruction` — `"getCred"`
 
@@ -894,14 +906,14 @@ These are the primary **gRPC instructions** exposed by the TeamServer to perform
 
 ### `SocksInstruction_` — `"socks"`
 
-**Purpose:** endpoint to manage SOCKS5 service(s) provided by the TeamServer (start/bind/stop a socks proxy). This is the entry point for socks management.
+**Purpose:** endpoint to manage SOCKS5 service(s) provided by the TeamServer (start/bind/stop a SOCKS proxy). This is the entry point for SOCKS management.
 
 ---
 
 
 ## 📜 Logging
 
-TeamServer logs using `spdlog` in `logs/` and provides good traceability of operations and actions performed. 
+TeamServer logs using `spdlog` in `logs/` and provides good traceability of operations and actions performed.
 For auditability and forensic tracing, TeamServer records the hash for any file payload attached to a task. The log entry includes the filename, payload size, the computed hash, and a timestamp. Hashing is performed in-memory on the payload, and only the fingerprint is persisted in logs.
 
 ```log
@@ -929,13 +941,12 @@ This setup provides multiple security benefits:
 * 🧰 **Stealth:** Makes it easier to blend C2 traffic into normal web traffic using domain fronting or proxy camouflage.
 * 📝 **Auditing:** Proxies provide an additional layer of logging and monitoring without touching the C2 codebase.
 
-This layered architecture: **TeamServer in a secured internal environment**, **proxy at the edge**, greatly improves the operational security of your C2 infrastructure while maintaining flexibility for listeners and implants.
+This layered architecture, with the **TeamServer in a secured internal environment** and the **proxy at the edge**, greatly improves the operational security of your C2 infrastructure while maintaining flexibility for listeners and implants.
 
 ---
 
 ## What’s next
 
-[Part 2 — GUI](./Part2Gui.md).  
-[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).  
-[Part 4 — Modules](./Part4Modules.md).  
-
+- [Part 2 - GUI](./Part2Gui.html)
+- [Part 3 - Beacons and Listeners](./Part3BeaconsAndListeners.html)
+- [Part 4 - Modules](./Part4Modules.html)

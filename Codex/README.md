@@ -1,6 +1,17 @@
+---
+layout: post
+article: true
+title: "My Journey with Codex"
+date: 2025-10-15
+category: ai-assisted-development
+tags: [codex, c2, ai-assisted-development, testing, templates]
+description: "Lessons learned from using Codex on C2Core, module templates, tests, and DNS communication work."
+permalink: /Codex/
+---
+
 # My Journey with Codex
 
-## What is this codex stuff about ?
+## What is this Codex stuff about?
 
 A long time ago, I followed Andrew Ng’s course on machine learning. At that time, my goal was to distinguish what was genuinely achievable with “AI” from what was closer to science fiction.
 
@@ -11,19 +22,19 @@ When ChatGPT appeared, my curiosity was reignited: the internet is full of natur
 After experimenting with it for several months and exploring the OpenAI API, I eventually subscribed to ChatGPT Plus. Only then did I discover the Codex feature, which I had not even heard about before.
 When I first experimented with Codex, my approach was naïve: I simply threw my entire codebase at it and waited for something magical to happen. Spoiler: it didn’t. The results were inconsistent and often not very useful.
 
-My very first prompts was:
+My very first prompt was:
 
-![alt text](./images/FirstPrompt.png)
+![First Codex prompt screenshot](./images/FirstPrompt.png)
 
 The actual outputs were not especially valuable. What truly fascinated me, however, was observing the agent’s log. Codex issued system commands that were sometimes unintentionally amusing—for instance, commands to read a portion of a file:
 
-![alt text](./images/SedRead.png)
+![Codex reading a file with sed](./images/SedRead.png)
 
 It even explained its reasoning along the way, with lines such as: “I’ll take a look at the config JSON file now.” And when I issued a “code” query, Codex concluded by summarizing its work in the form of a proposed pull request.
 The moment that truly struck me, however, was when it attempted the following:
 
 ``` bash
-cmake .. 
+cmake ..
 (failed to configure because the command conan_cmake_configure was not found)
 ```
 
@@ -43,7 +54,7 @@ After achieving the first step, I asked Codex to generate primarily tests and th
 
 A very important component of the project is actually the AGENT.md file, which Codex will try to read every time.
 
-![alt text](./images/AgentFile.png)
+![AGENT.md guidance file for Codex](./images/AgentFile.png)
 
 This shift made a decisive difference. From that point onward, Codex’s tasks took longer but consistently produced code that not only compiled but also executed successfully.
 
@@ -53,22 +64,22 @@ The lesson was clear: when Codex is given the opportunity to test its own work, 
 
 Another major breakthrough came when I realized how much Codex benefits from templates. The insight emerged while reviewing logs, where I noticed a message along the lines of: “reading this file to see how this is done.”
 
-This led me to experiment with providing Codex explicit templates as starting points. The results were remarkable. One of the most striking examples was when Codex successfully generated multiple libraries, starting from the following prompt:
+This led me to experiment with providing Codex with explicit templates as starting points. The results were remarkable. One of the most striking examples was when Codex successfully generated multiple libraries, starting from the following prompt:
 You are a C++ expert working on a cross-platform C2 framework.
 
-``` 
+```
 Code the following modules:
-GetEnv 
-Whoami 
-Netstat 
-IpConfig 
-EnumerateShares 
+GetEnv
+Whoami
+Netstat
+IpConfig
+EnumerateShares
 
 Each moduleName must start with lowercase, and follow the existing module format.
 
 Requirements:
 
-The modules must work on both Windows and Linux platforms but do not need to use the same code necessarly.
+The modules must work on both Windows and Linux platforms but do not need to use the same code necessarily.
 You may use platform-specific code (e.g., #ifdef _WIN32) as needed.
 Output formats don't need to match across platforms, but must be functional.
 Use ModuleTemplate and Cat as structural references for the modules (class declaration, process() method, etc.).
@@ -90,20 +101,20 @@ Make the modules clean, modular, and follow the style of existing modules in the
 The first result was kind of funny, because it gave me an implementation using the system tools, like launching whoami.exe and after issuing the following prompt:
 
 ```
-Ok it's a good start but what I want it that you use native api call for windows, not to use third partie program like whoami or ipconfig or netstat, use the windows API calls available to perform the enumeration. Same for linux use c/c++ cmd or syscall.
+Ok, it's a good start, but what I want is that you use native API calls for Windows, not third-party programs like whoami, ipconfig, or netstat. Use the Windows API calls available to perform the enumeration. Same for Linux: use C/C++ commands or syscalls.
 ```
 
 The results were highly convincing, as illustrated in the corresponding pull request:
 
 [Codex PR](https://github.com/maxDcb/C2Core/pull/10/commits)
 
-![alt text](./images/CodexPR.png)
+![Codex-generated pull request](./images/CodexPR.png)
 
 My conclusion was straightforward: **the more guidance you provide, the better the results.**
 
 ## The Windows vs. Ubuntu Challenge
 
-One of the main difficulties I encountered was the mismatch between platforms. 
+One of the main difficulties I encountered was the mismatch between platforms.
 
 My project included Windows modules, whereas Codex operated within an Ubuntu environment. As a result, the code it produced was generally “almost correct” but consistently required manual adjustments to compile and run properly on Windows. This experience reinforced my intuition that, without a feedback loop, Codex is significantly less effective.
 
@@ -113,15 +124,15 @@ Interestingly, this also highlighted a very human-like method in the way Codex �
 
 After achieving good results in the C2Core repository, I was eager to apply Codex more broadly. One project that I wanted to come back to was an older one I had not touched for some time: libDnsCommunication, a C++ library for DNS-based message tunneling. My goal was to extend it by supporting multiple concurrent sessions and improving overall robustness.
 
-I began with a simple request: adding logging to facilitate debugging. Encouraged by the results, I quickly moved to more feature-oriented tasks. Codex did provide suggestions, but because the original codebase was poorly structured, its contributions ultimately made the project more disorganized. 
+I began with a simple request: adding logging to facilitate debugging. Encouraged by the results, I quickly moved to more feature-oriented tasks. Codex did provide suggestions, but because the original codebase was poorly structured, its contributions ultimately made the project more disorganized.
 
-![alt text](./images/DnsLibCodex.png)
+![Codex attempt on libDnsCommunication](./images/DnsLibCodex.png)
 
 Rather than introducing the architectural clarity that was needed, Codex kept patching issues and layering incremental fixes.
 
-In the end, I had to manually rebuild a clean architecture before real progress could be made. 
+In the end, I had to manually rebuild a clean architecture before real progress could be made.
 
-![alt text](./images/DnsLibCodex2.png)
+![Refactored libDnsCommunication architecture](./images/DnsLibCodex2.png)
 
 The conclusion was straightforward:
 - If the foundation is solid, Codex accelerates progress.
@@ -129,9 +140,9 @@ The conclusion was straightforward:
 
 ## Conclusion
 
-The potential of Codex-like agents is immense, provided they are given the right conditions to succeed. 
+The potential of Codex-like agents is immense, provided they are given the right conditions to succeed.
 
-I now use Codex particularly during idle moments—such as while commuting or during breaks to explore tasks I might otherwise have postponed, or to test new ideas that help clarify my perspective.
+I now use Codex particularly during idle moments — such as while commuting or during breaks — to explore tasks I might otherwise have postponed, or to test new ideas that help clarify my perspective.
 
 ```
 You are a GUI expert. Take a look at C2Client, which is a GUI coded in Python, and propose the best language replacement if I had to build it from scratch in another language. Also, assess the time that would be necessary.

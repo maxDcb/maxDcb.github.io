@@ -1,11 +1,23 @@
-# Part 0 — Setup & Basic Usage
+---
+layout: post
+article: true
+title: "Building a Modern C2 - Part 0: Setup and Basic Usage"
+date: 2025-10-20
+category: c2
+series: "Building a Modern C2"
+tags: [c2, setup, docker, release, quickstart]
+description: "A quickstart for running C2TeamServer locally or with Docker and connecting the client and first beacon."
+permalink: /BuildingAModernC2/Part0SetUpAndBasicUsage.html
+---
+
+# Part 0 - Setup and Basic Usage
 
 A short quickstart to get **C2TeamServer** running locally (raw binary or Docker) and connect the client. The steps below show how to:
 
 * download the latest release,
 * run the TeamServer (local or Docker),
 * extract the mTLS certificate for the client,
-* install & run the client.
+* install and run the client.
 
 > Prerequisites: `wget` / `curl`, `jq`, `tar`, `docker` (for the Docker section).
 
@@ -138,7 +150,7 @@ If you ran the server natively, `server.crt` is already in `C2TeamServer/TeamSer
 
 ## 3 — Install & run the client
 
-This project ships a Python client in the `C2Client` subdirectory. The example below uses `uv` ([UV astral](https://docs.astral.sh/uv/getting-started/installation/)) to install the client from the repository; you can also use `pip` or install from source if preferred.
+This project ships a Python client in the `C2Client` subdirectory. The example below uses `uv` ([Astral uv](https://docs.astral.sh/uv/getting-started/installation/)) to install the client from the repository; you can also use `pip` or install from source if preferred.
 
 ```bash
 # example with 'uv' (as used in the repo examples)
@@ -179,7 +191,7 @@ admin:admin
   * copy the release out of the image first (`docker cp`) and mount that host folder, or
   * mount a specific subfolder (e.g., `logs`) instead of the entire `Release` path.
 * **Permissions:** ensure `TeamServer` is executable (`chmod +x`).
-* **Ports:** default gRPC port is `50051`; additional services may listen on `80`, `443`, `8443` depending on listeners setup, adjust with your needs.
+* **Ports:** default gRPC port is `50051`; additional services may listen on `80`, `443`, `8443` depending on listener setup; adjust to your needs.
 
 ---
 
@@ -205,9 +217,9 @@ uv tool install git+https://github.com/maxDcb/C2TeamServer.git#subdirectory=C2Cl
 c2client
 ```
 
-At the start of the client, some basic script are executed, to launch a listener in port 8443 and loadmodule ListDirectory in case of beacon connection.
+At the start of the client, some basic scripts are executed to launch a listener on port 8443 and load the `ListDirectory` module when a beacon connects.
 
-![alt text](media/basicScripts.png)
+![Basic startup scripts loaded by the client](media/basicScripts.png)
 
 ---
 
@@ -215,7 +227,7 @@ At the start of the client, some basic script are executed, to launch a listener
 
 ![Login panel screenshot](media/loginPanel.png)
 
-![alt text](media/mainPanel.png)
+![Main C2 client panel](media/mainPanel.png)
 
 ---
 
@@ -237,7 +249,7 @@ chmod +x BeaconHttp
 ```
 
 * `127.0.0.1` — TeamServer host (replace with TeamServer IP or hostname when remote).
-* `8443` — port configured for the HTTP(s) listener (adjust if your listener uses another port).
+* `8443` — port configured for the HTTP(S) listener (adjust if your listener uses another port).
 * `https` — protocol; use `http` only for local/insecure tests.
 
 
@@ -250,7 +262,7 @@ chmod +x BeaconHttp
 
 ## Next
 
-[Part 1 — TeamServer & Architecture](./Part1TeamServerAndArchitecture.md).  
-[Part 2 — GUI](./Part2Gui.md).  
-[Part 3 — Beacons And Listeners](./Part3BeaconsAndListeners.md).  
-[Part 4 — Modules](./Part4Modules.md).  
+- [Part 1 - TeamServer and Architecture](./Part1TeamServerAndArchitecture.html)
+- [Part 2 - GUI](./Part2Gui.html)
+- [Part 3 - Beacons and Listeners](./Part3BeaconsAndListeners.html)
+- [Part 4 - Modules](./Part4Modules.html)

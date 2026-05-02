@@ -1,0 +1,30 @@
+{% assign articles = site.pages | where: "article", true | sort: "date" | reverse %}
+{% if articles.size > 0 %}
+  <div class="article-list">
+    {% for article in articles %}
+      <article class="article-card">
+        <div class="article-meta">
+          {% if article.date %}
+            <time datetime="{{ article.date | date_to_xmlschema }}">{{ article.date | date: "%Y-%m-%d" }}</time>
+          {% endif %}
+          {% if article.series %}
+            <span>{{ article.series }}</span>
+          {% endif %}
+        </div>
+        <h2><a href="{{ article.url | relative_url }}">{{ article.title }}</a></h2>
+        {% if article.description %}
+          <p>{{ article.description }}</p>
+        {% endif %}
+        {% if article.tags %}
+          <ul class="tag-list">
+            {% for tag in article.tags %}
+              <li>{{ tag }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>No articles are published yet.</p>
+{% endif %}
